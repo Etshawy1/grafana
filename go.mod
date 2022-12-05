@@ -5,7 +5,7 @@ go 1.19
 // Override xorm's outdated go-mssqldb dependency, since we can't upgrade to current xorm (due to breaking changes).
 // We need a more current go-mssqldb so we get rid of a version of apache/thrift with vulnerabilities.
 // Also, use our fork with fixes for unimplemented methods (required for Go 1.16).
-replace github.com/denisenkom/go-mssqldb => github.com/grafana/go-mssqldb v0.0.0-20210326084033-d0ce3c521036
+replace github.com/denisenkom/go-mssqldb => github.com/MadSkittles/go-mssqldb v0.12.4
 
 // Override k8s.io/client-go outdated dependency, which is an indirect dependency of grafana/loki.
 // It's also present on grafana/loki's go.mod so we'll need till it gets updated.
@@ -285,6 +285,7 @@ require (
 	github.com/drone/envsubst v1.0.3 // indirect
 	github.com/drone/runner-go v1.12.0 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0 // indirect
+	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.0.0-20220520183353-fd19c99a87aa // indirect
 	github.com/googleapis/go-type-adapters v1.0.0 // indirect
@@ -374,7 +375,7 @@ replace github.com/hashicorp/go-hclog => github.com/hashicorp/go-hclog v0.16.1
 // This is a patched v0.8.2 intended to fix session.Find (and others) silently ignoring SQLITE_BUSY errors. This could
 // happen, for example, during a read when the sqlite db is under heavy write load.
 // This patch cherry picks compatible fixes from upstream xorm PR#1998 and can be reverted on upgrade to xorm v1.2.0+.
-replace xorm.io/xorm => github.com/grafana/xorm v0.8.3-0.20220614223926-2fcda7565af6
+replace xorm.io/xorm => gitea.com/MadSkittles/xorm v0.8.3
 
 // Use our fork of the upstream alertmanagers.
 // This is required in order to get notification delivery errors from the receivers API.
