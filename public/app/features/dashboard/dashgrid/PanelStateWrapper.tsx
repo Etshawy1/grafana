@@ -586,7 +586,7 @@ export class PanelStateWrapper extends PureComponent<Props, State> {
     const title = panel.getDisplayTitle();
     const noPadding: PanelPadding = plugin.noPadding ? 'none' : 'md';
     const leftItems = [
-      <PanelHeaderLoadingIndicator state={data.state} onClick={onCancelQuery} key="loading-indicator" />,
+      <PanelHeaderLoadingIndicator state={data.state} onClick={onCancelQuery} panel={panel} key="loading-indicator" />,
     ];
 
     if (config.featureToggles.newPanelChromeUI) {

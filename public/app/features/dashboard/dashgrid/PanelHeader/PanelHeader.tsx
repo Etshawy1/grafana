@@ -35,7 +35,7 @@ export const PanelHeader: FC<Props> = ({ panel, error, isViewing, isEditing, dat
 
   return (
     <>
-      <PanelHeaderLoadingIndicator state={data.state} onClick={onCancelQuery} />
+      <PanelHeaderLoadingIndicator state={data.state} onClick={onCancelQuery} panel={panel} />
       <PanelHeaderCorner
         panel={panel}
         title={panel.title}

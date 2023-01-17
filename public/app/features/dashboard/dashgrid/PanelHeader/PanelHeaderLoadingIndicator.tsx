@@ -4,13 +4,26 @@ import React, { FC } from 'react';
 import { GrafanaTheme2, LoadingState } from '@grafana/data';
 import { Icon, Tooltip, useStyles2 } from '@grafana/ui';
 
+import { PanelModel } from '../../state';
+import { refreshPanel } from '../../utils/panel';
+
 interface Props {
   state: LoadingState;
   onClick: () => void;
+  panel: PanelModel;
 }
 
-export const PanelHeaderLoadingIndicator: FC<Props> = ({ state, onClick }) => {
+export const PanelHeaderLoadingIndicator: FC<Props> = ({ state, onClick, panel }) => {
   const styles = useStyles2(getStyles);
+  if ([LoadingState.NotStarted, LoadingState.Done, LoadingState.Error].includes(state)) {
+    return (
+      <div className="panel-loading" onClick={() => refreshPanel(panel)}>
+        <Tooltip content="Refresh Panel">
+          <Icon name="sync" />
+        </Tooltip>
+      </div>
+    );
+  }
 
   if (state === LoadingState.Loading) {
     return (
