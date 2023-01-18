@@ -276,7 +276,6 @@ export class TimeSrv {
   // resume auto-refresh based on old dashboard refresh property
   resumeAutoRefresh() {
     this.autoRefreshPaused = false;
-    this.refreshTimeModel();
   }
 
   setTime(time: RawTimeRange, updateUrl = true) {
