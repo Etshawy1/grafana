@@ -15,7 +15,7 @@ interface Props {
 
 export const PanelHeaderLoadingIndicator: FC<Props> = ({ state, onClick, panel }) => {
   const styles = useStyles2(getStyles);
-  if ([LoadingState.NotStarted, LoadingState.Done, LoadingState.Error].includes(state)) {
+  if ([LoadingState.Done, LoadingState.Error].includes(state)) {
     return (
       <div className="panel-loading" onClick={() => refreshPanel(panel)}>
         <Tooltip content="Refresh Panel">
