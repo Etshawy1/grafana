@@ -85,6 +85,7 @@ func (hs *HTTPServer) registerRoutes() {
 	r.Get("/profile/password", reqSignedInNoAnonymous, hs.Index)
 	r.Get("/.well-known/change-password", redirectToChangePassword)
 	r.Get("/profile/switch-org/:id", reqSignedInNoAnonymous, hs.ChangeActiveOrgAndRedirectToHome)
+	r.Get("/org/join-request/:orgId", reqSignedInNoAnonymous, hs.Index)
 	r.Get("/org/", authorize(reqOrgAdmin, ac.OrgPreferencesAccessEvaluator), hs.Index)
 	r.Get("/org/new", authorizeInOrg(reqGrafanaAdmin, ac.UseGlobalOrg, ac.OrgsCreateAccessEvaluator), hs.Index)
 	r.Get("/datasources/", authorize(reqOrgAdmin, datasources.ConfigurationPageAccess), hs.Index)
@@ -232,6 +233,8 @@ func (hs *HTTPServer) registerRoutes() {
 			userRoute.Post("/using/:id", routing.Wrap(hs.UserSetUsingOrg))
 			userRoute.Get("/orgs", routing.Wrap(hs.GetSignedInUserOrgList))
 			userRoute.Get("/teams", routing.Wrap(hs.GetSignedInUserTeamList))
+			userRoute.Post("/joinRequest/:orgId", routing.Wrap(hs.JoinRequest))
+			userRoute.Get("/orgAdmins/:orgId", routing.Wrap(hs.GetOrgAdmins))
 
 			userRoute.Get("/stars", routing.Wrap(hs.starApi.GetStars))
 			// Deprecated: use /stars/dashboard/uid/:uid API instead.
@@ -321,6 +324,11 @@ func (hs *HTTPServer) registerRoutes() {
 			orgRoute.Patch("/users/:userId", authorize(reqOrgAdmin, ac.EvalPermission(ac.ActionOrgUsersWrite, userIDScope)), routing.Wrap(hs.UpdateOrgUserForCurrentOrg))
 			orgRoute.Delete("/users/:userId", authorize(reqOrgAdmin, ac.EvalPermission(ac.ActionOrgUsersRemove, userIDScope)), routing.Wrap(hs.RemoveOrgUserForCurrentOrg))
 
+			// join requests
+			orgRoute.Get("/joinRequests", authorize(reqOrgAdmin, ac.EvalPermission(ac.ActionOrgUsersAdd)), routing.Wrap(hs.GetOrgJoinRequests))
+			orgRoute.Patch("/joinRequest/:id/reject", authorize(reqOrgAdmin, ac.EvalPermission(ac.ActionOrgUsersAdd)), routing.Wrap(hs.RejectJoinRequest))
+			orgRoute.Patch("/joinRequest/:id/approve", authorize(reqOrgAdmin, ac.EvalPermission(ac.ActionOrgUsersAdd)), routing.Wrap(hs.ApproveJoinRequest))
+
 			// invites
 			orgRoute.Get("/invites", authorize(reqOrgAdmin, ac.EvalPermission(ac.ActionOrgUsersAdd)), routing.Wrap(hs.GetPendingOrgInvites))
 			orgRoute.Post("/invites", authorize(reqOrgAdmin, ac.EvalPermission(ac.ActionOrgUsersAdd)), quota(user.QuotaTargetSrv), quota(user.QuotaTargetSrv), routing.Wrap(hs.AddOrgInvite))
@@ -360,6 +368,7 @@ func (hs *HTTPServer) registerRoutes() {
 			userIDScope := ac.Scope("users", "id", ac.Parameter(":userId"))
 			orgsRoute.Get("/", authorizeInOrg(reqGrafanaAdmin, ac.UseOrgFromContextParams, ac.EvalPermission(ac.ActionOrgsRead)), routing.Wrap(hs.GetOrgByID))
 			orgsRoute.Put("/", authorizeInOrg(reqGrafanaAdmin, ac.UseOrgFromContextParams, ac.EvalPermission(ac.ActionOrgsWrite)), routing.Wrap(hs.UpdateOrg))
+			orgsRoute.Put("/autoApprove", authorizeInOrg(reqGrafanaAdmin, ac.UseOrgFromContextParams, ac.EvalPermission(ac.ActionOrgsWrite)), routing.Wrap(hs.UpdateOrgAutoApprove))
 			orgsRoute.Put("/address", authorizeInOrg(reqGrafanaAdmin, ac.UseOrgFromContextParams, ac.EvalPermission(ac.ActionOrgsWrite)), routing.Wrap(hs.UpdateOrgAddress))
 			orgsRoute.Delete("/", authorizeInOrg(reqGrafanaAdmin, ac.UseOrgFromContextParams, ac.EvalPermission(ac.ActionOrgsDelete)), routing.Wrap(hs.DeleteOrgByID))
 			orgsRoute.Get("/users", authorizeInOrg(reqGrafanaAdmin, ac.UseOrgFromContextParams, ac.EvalPermission(ac.ActionOrgUsersRead)), routing.Wrap(hs.GetOrgUsers))

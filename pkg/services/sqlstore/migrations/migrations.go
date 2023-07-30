@@ -96,6 +96,8 @@ func (*OSSMigrations) AddMigration(mg *Migrator) {
 	AddExternalAlertmanagerToDatasourceMigration(mg)
 
 	addFolderMigrations(mg)
+
+	addJoinRequesterMigrations(mg)
 }
 
 func addMigrationLogMigrations(mg *Migrator) {
