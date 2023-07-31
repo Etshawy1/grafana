@@ -93,6 +93,17 @@ export interface UserSession {
   device: string;
 }
 
+export interface JoinRequester {
+  createdOn: string;
+  email: string;
+  id: number;
+  name: string;
+  orgId: number;
+  role: string;
+  justification: string;
+  status: string;
+}
+
 export interface UserOrg {
   name: string;
   orgId: number;
