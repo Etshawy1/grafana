@@ -10,13 +10,13 @@ import (
 	"strconv"
 	"strings"
 
-	mssql "github.com/grafana/go-mssqldb"
+	mssql "github.com/denisenkom/go-mssqldb"
+	_ "github.com/denisenkom/go-mssqldb/azuread"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/sqlutil"
-
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/tsdb/sqleng"
@@ -100,6 +100,9 @@ func newInstanceSettings(cfg *setting.Cfg) datasource.InstanceFactoryFunc {
 				return nil, err
 			}
 		}
+		if strings.Contains(cnnstr, "fedauth=ActiveDirectory") {
+			driverName = "azuresql"
+		}
 
 		config := sqleng.DataPluginConfiguration{
 			DriverName:        driverName,
@@ -167,12 +170,22 @@ func generateConnectionString(dsInfo sqleng.DataSourceInfo) (string, error) {
 	tlsSkipVerify := dsInfo.JsonData.TlsSkipVerify
 	hostNameInCertificate := dsInfo.JsonData.Servername
 	certificate := dsInfo.JsonData.RootCertFile
+	user, password := dsInfo.User, dsInfo.DecryptedSecureJSONData["password"]
+	if user == "ActiveDirectoryMSI" {
+		user, password = "", ""
+	}
 	connStr := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s;",
 		addr.Host,
 		dsInfo.Database,
-		dsInfo.User,
-		dsInfo.DecryptedSecureJSONData["password"],
+		user,
+		password,
 	)
+	if strings.Contains(dsInfo.User, "@") {
+		connStr += "fedauth=ActiveDirectoryServicePrincipal;"
+	}
+	if dsInfo.User == "ActiveDirectoryMSI" {
+		connStr += "fedauth=ActiveDirectoryMSI;"
+	}
 	// Port number 0 means to determine the port automatically, so we can let the driver choose
 	if addr.Port != "0" {
 		connStr += fmt.Sprintf("port=%s;", addr.Port)

@@ -5,7 +5,7 @@ go 1.19
 // Override xorm's outdated go-mssqldb dependency, since we can't upgrade to current xorm (due to breaking changes).
 // We need a more current go-mssqldb so we get rid of a version of apache/thrift with vulnerabilities.
 // Also, use our fork with fixes for unimplemented methods (required for Go 1.16).
-replace github.com/denisenkom/go-mssqldb => github.com/grafana/go-mssqldb v0.9.2
+replace github.com/denisenkom/go-mssqldb => github.com/Etshawy1/go-mssqldb v0.12.5
 
 // Override docker/docker to avoid:
 // go: github.com/drone-runners/drone-runner-docker@v1.8.2 requires
@@ -259,10 +259,10 @@ require (
 	github.com/alicebob/miniredis/v2 v2.30.1
 	github.com/blang/semver/v4 v4.0.0
 	github.com/dave/dst v0.27.2
+	github.com/denisenkom/go-mssqldb v0.12.0
 	github.com/go-jose/go-jose/v3 v3.0.0
 	github.com/grafana/dataplane/examples v0.0.0-20230404174214-4d6fd58a18ad
 	github.com/grafana/dataplane/sdata v0.0.6
-	github.com/grafana/go-mssqldb v0.9.1
 	github.com/grafana/kindsys v0.0.0-20230508175818-7ad73516220b
 	github.com/grafana/thema v0.0.0-20230417103609-99b482c479fe
 	github.com/redis/go-redis/v9 v9.0.2
@@ -300,6 +300,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.6.13 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.4 // indirect
+	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
@@ -407,7 +408,7 @@ replace github.com/hashicorp/go-hclog => github.com/hashicorp/go-hclog v0.16.1
 // This is a patched v0.8.2 intended to fix session.Find (and others) silently ignoring SQLITE_BUSY errors. This could
 // happen, for example, during a read when the sqlite db is under heavy write load.
 // This patch cherry picks compatible fixes from upstream xorm PR#1998 and can be reverted on upgrade to xorm v1.2.0+.
-replace xorm.io/xorm => github.com/grafana/xorm v0.8.3-0.20220614223926-2fcda7565af6
+replace xorm.io/xorm => gitea.com/MadSkittles/xorm v0.8.3
 
 // replace xorm.io/xorm => ./pkg/util/xorm
 
