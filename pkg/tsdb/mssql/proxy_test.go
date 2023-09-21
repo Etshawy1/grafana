@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	mssql "github.com/grafana/go-mssqldb"
+	mssql "github.com/denisenkom/go-mssqldb"
 	"github.com/grafana/grafana/pkg/tsdb/sqleng"
 	"github.com/grafana/grafana/pkg/tsdb/sqleng/proxyutil"
 	"github.com/stretchr/testify/require"
