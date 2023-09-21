@@ -48,6 +48,9 @@ lineage: schemas: [{
 			// Whether a dashboard is editable or not.
 			editable: bool | *true
 
+      // Whether a dashboard is eagarly loaded or not.
+			eagerLoad?: bool | *false
+
 			// Configuration of dashboard cursor sync behavior.
 			// Accepted values are 0 (sync turned off), 1 (shared crosshair), 2 (shared crosshair and tooltip).
 			graphTooltip: #DashboardCursorSync
