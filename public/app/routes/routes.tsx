@@ -226,6 +226,10 @@ export function getAppRoutes(): RouteDescriptor[] {
       component: SafeDynamicImport(() => import(/* webpackChunkName: "NewOrgPage" */ 'app/features/org/NewOrgPage')),
     },
     {
+      path: '/org/join-request/:orgId',
+      component: SafeDynamicImport(() => import(/* webpackChunkName: "JoinOrgPage" */ 'app/features/org/JoinOrgPage')),
+    },
+    {
       path: '/org/users',
       component: SafeDynamicImport(
         () => import(/* webpackChunkName: "UsersListPage" */ 'app/features/users/UsersListPage')

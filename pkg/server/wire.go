@@ -71,6 +71,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/grpcserver/interceptors"
 	"github.com/grafana/grafana/pkg/services/guardian"
 	"github.com/grafana/grafana/pkg/services/hooks"
+	"github.com/grafana/grafana/pkg/services/join_requester/join_requesterimpl"
 	ldapapi "github.com/grafana/grafana/pkg/services/ldap/api"
 	ldapservice "github.com/grafana/grafana/pkg/services/ldap/service"
 	"github.com/grafana/grafana/pkg/services/libraryelements"
@@ -329,6 +330,7 @@ var wireBasicSet = wire.NewSet(
 	publicdashboardsApi.ProvideApi,
 	starApi.ProvideApi,
 	userimpl.ProvideService,
+	join_requesterimpl.ProvideService,
 	orgimpl.ProvideService,
 	statsimpl.ProvideService,
 	grpccontext.ProvideContextHandler,

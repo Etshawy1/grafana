@@ -34,8 +34,10 @@ type store interface {
 
 	// TO BE REFACTORED - move logic to service methods and leave CRUD methods for store
 	UpdateAddress(context.Context, *org.UpdateOrgAddressCommand) error
+	UpdateAutoApprove(context.Context, *org.UpdateOrgAutoApproveCommand) error
 	Delete(context.Context, *org.DeleteOrgCommand) error
 	GetUserOrgList(context.Context, *org.GetUserOrgListQuery) ([]*org.UserOrgDTO, error)
+	GetAdminOrgList(context.Context, int64) ([]*org.AdminOrgDTO, error)
 	Search(context.Context, *org.SearchOrgsQuery) ([]*org.OrgDTO, error)
 	CreateWithMember(context.Context, *org.CreateOrgCommand) (*org.Org, error)
 	AddOrgUser(context.Context, *org.AddOrgUserCommand) error
@@ -205,6 +207,23 @@ func (ss *sqlStore) UpdateAddress(ctx context.Context, cmd *org.UpdateOrgAddress
 }
 
 // TODO: refactor move logic to service method
+func (ss *sqlStore) UpdateAutoApprove(ctx context.Context, cmd *org.UpdateOrgAutoApproveCommand) error {
+	return ss.db.WithTransactionalDbSession(ctx, func(sess *db.Session) error {
+		org := org.Org{
+			AutoApproveViewJoinReq: cmd.AutoApprove,
+
+			Updated: time.Now(),
+		}
+		sess.UseBool("auto_approve_view_join_req")
+		if _, err := sess.ID(cmd.OrgID).Update(&org); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// TODO: refactor move logic to service method
 func (ss *sqlStore) Delete(ctx context.Context, cmd *org.DeleteOrgCommand) error {
 	return ss.db.WithTransactionalDbSession(ctx, func(sess *db.Session) error {
 		if res, err := sess.Query("SELECT 1 from org WHERE id=?", cmd.ID); err != nil {
@@ -244,6 +263,25 @@ func (ss *sqlStore) Delete(ctx context.Context, cmd *org.DeleteOrgCommand) error
 
 		return nil
 	})
+}
+
+func (ss *sqlStore) GetAdminOrgList(ctx context.Context, orgId int64) ([]*org.AdminOrgDTO, error) {
+	result := make([]*org.AdminOrgDTO, 0)
+	err := ss.db.WithDbSession(ctx, func(dbSess *db.Session) error {
+		sess := dbSess.Table("org_user")
+		sess.Join("INNER", "org", "org_user.org_id=org.id")
+		sess.Join("INNER", ss.dialect.Quote("user"), fmt.Sprintf("org_user.user_id=%s.id", ss.dialect.Quote("user")))
+		sess.Where("org_user.role=?", org.RoleAdmin)
+		sess.Where("org_user.org_id=?", orgId)
+		sess.Cols("org.name", "org_user.role", "user.email", "org_user.created")
+		sess.OrderBy("org_user.created")
+		err := sess.Find(&result)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // TODO: refactor move logic to service method

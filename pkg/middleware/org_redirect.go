@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/grafana/grafana/pkg/services/contexthandler"
+	"github.com/grafana/grafana/pkg/services/org"
+	"github.com/grafana/grafana/pkg/services/provisioning/utils"
 	"github.com/grafana/grafana/pkg/services/user"
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/web"
@@ -14,7 +16,7 @@ import (
 
 // OrgRedirect changes org and redirects users if the
 // querystring `orgId` doesn't match the active org.
-func OrgRedirect(cfg *setting.Cfg, userSvc user.Service) web.Handler {
+func OrgRedirect(cfg *setting.Cfg, userSvc user.Service, orgSvc org.Service) web.Handler {
 	return func(res http.ResponseWriter, req *http.Request, c *web.Context) {
 		orgIdValue := req.URL.Query().Get("orgId")
 		orgId, err := strconv.ParseInt(orgIdValue, 10, 64)
@@ -34,12 +36,18 @@ func OrgRedirect(cfg *setting.Cfg, userSvc user.Service) web.Handler {
 
 		cmd := user.SetUsingOrgCommand{UserID: ctx.UserID, OrgID: orgId}
 		if err := userSvc.SetUsingOrg(ctx.Req.Context(), &cmd); err != nil {
-			if ctx.IsApiRequest() {
-				ctx.JsonApiErr(404, "Not found", nil)
-			} else {
-				http.Error(ctx.Resp, "Not found", http.StatusNotFound)
-			}
+			err = utils.CheckOrgExists(ctx.Req.Context(), orgSvc, orgId)
 
+			if err != nil {
+				if ctx.IsApiRequest() {
+					ctx.JsonApiErr(404, fmt.Sprintf("Organization with id %d Not found", orgId), nil)
+				} else {
+					http.Error(ctx.Resp, fmt.Sprintf("Organization with id %d Not found", orgId), http.StatusNotFound)
+				}
+				return
+			}
+			newURL := fmt.Sprintf("%s%s/%s", cfg.AppURL, "org/join-request", orgIdValue)
+			c.Redirect(newURL, 302)
 			return
 		}
 
