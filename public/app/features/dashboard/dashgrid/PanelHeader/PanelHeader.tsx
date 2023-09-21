@@ -40,7 +40,7 @@ export function PanelHeader({ panel, error, isViewing, isEditing, data, alertSta
 
   return (
     <>
-      <PanelHeaderLoadingIndicator state={data.state} onClick={onCancelQuery} />
+      <PanelHeaderLoadingIndicator state={data.state} onClick={onCancelQuery} panel={panel} />
       <PanelHeaderCorner
         panel={panel}
         title={panel.title}

@@ -17,6 +17,7 @@ import { PanelDescription } from './PanelDescription';
 import { PanelMenu } from './PanelMenu';
 import { PanelStatus } from './PanelStatus';
 import { TitleItem } from './TitleItem';
+import { PanelModel } from '../../../../../public/app/features/dashboard/state';
 
 /**
  * @internal
@@ -56,6 +57,8 @@ interface BaseProps {
    * callback when opening the panel menu
    */
   onOpenMenu?: () => void;
+
+  panel?: PanelModel;
 }
 
 interface FixedDimensions extends BaseProps {
@@ -99,6 +102,7 @@ export function PanelChrome({
   actions,
   onCancelQuery,
   onOpenMenu,
+  panel
 }: PanelChromeProps) {
   const theme = useTheme2();
   const styles = useStyles2(getStyles);
@@ -143,6 +147,14 @@ export function PanelChrome({
         <PanelDescription description={description} className={dragClassCancel} />
         {titleItems}
       </div>
+
+      {panel && (loadingState === LoadingState.Done || loadingState === LoadingState.Error) && (
+        <Tooltip content="Refresh Panel">
+          <TitleItem className={dragClassCancel} onClick={() => panel.refresh()}>
+            <Icon name="sync"/>
+          </TitleItem>
+        </Tooltip>
+      )}
       {loadingState === LoadingState.Streaming && (
         <Tooltip content={onCancelQuery ? 'Stop streaming' : 'Streaming'}>
           <TitleItem className={dragClassCancel} data-testid="panel-streaming" onClick={onCancelQuery}>
