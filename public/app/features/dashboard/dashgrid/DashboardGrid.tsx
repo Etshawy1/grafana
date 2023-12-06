@@ -284,6 +284,7 @@ export class DashboardGrid extends PureComponent<Props, State> {
         width={width}
         height={height}
         hideMenu={this.props.hidePanelMenus}
+        lazy={!this.props.dashboard.eagerLoad}
       />
     );
   }
