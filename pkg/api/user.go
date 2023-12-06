@@ -6,11 +6,14 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/grafana/grafana/pkg/api/dtos"
 	"github.com/grafana/grafana/pkg/api/response"
 	"github.com/grafana/grafana/pkg/services/auth/identity"
+	"github.com/grafana/grafana/pkg/models/roletype"
 	contextmodel "github.com/grafana/grafana/pkg/services/contexthandler/model"
+	"github.com/grafana/grafana/pkg/services/join_requester"
 	"github.com/grafana/grafana/pkg/services/login"
 	"github.com/grafana/grafana/pkg/services/org"
 	"github.com/grafana/grafana/pkg/services/team"
@@ -603,6 +606,92 @@ func getUserID(c *contextmodel.ReqContext) (int64, *response.NormalResponse) {
 
 	return userID, nil
 }
+func (hs *HTTPServer) JoinRequest(c *contextmodel.ReqContext) response.Response {
+	orgID, err := strconv.ParseInt(web.Params(c.Req)[":orgId"], 10, 64)
+	if err != nil {
+		return response.Error(http.StatusBadRequest, "org id is invalid", err)
+	}
+
+	createJoinRequestCmd := join_requester.CreateJoinRequestCommand{
+		Email: c.Email,
+		OrgID: orgID,
+	}
+	if err = web.Bind(c.Req, &createJoinRequestCmd); err != nil {
+		return response.Error(http.StatusBadRequest, "bad request data", err)
+	}
+
+	cmd := user.SetUsingOrgCommand{UserID: c.UserID, OrgID: orgID}
+	if err := hs.userService.SetUsingOrg(c.Req.Context(), &cmd); err != nil {
+		query := join_requester.SearchJoinRequestQuery{Email: c.Email, OrgID: orgID}
+
+		queryResult, err := hs.joinRequestService.Search(c.Req.Context(), &query)
+		if err != nil {
+			return response.Error(500, "Failed to check DB for existing join request", err)
+		}
+		if len(queryResult) > 0 {
+			_, err = hs.joinRequestService.Delete(c.Req.Context(), queryResult[0].ID)
+			if err != nil {
+				return response.Error(500, "Failed to update existing join request, submit a new one", err)
+			}
+			_, err = hs.joinRequestService.Create(c.Req.Context(), &createJoinRequestCmd)
+			if err != nil {
+				return response.Error(500, "Failed to update join request", err)
+			}
+			apiResponse := util.DynMap{"message": "Updated successfully, wait for Org Admin approval"}
+
+			return response.JSON(http.StatusOK, apiResponse)
+		}
+
+		if createJoinRequestCmd.Role == org.RoleViewer {
+			orga, err := hs.orgService.GetByID(c.Req.Context(), &org.GetOrgByIDQuery{ID: orgID})
+			if err != nil {
+				return response.Error(500, "Failed to get organization", err)
+			}
+			if orga.AutoApproveViewJoinReq == true {
+				orgUser := org.OrgUser{
+					OrgID:   orgID,
+					UserID:  c.UserID,
+					Role:    roletype.RoleType(createJoinRequestCmd.Role),
+					Created: time.Now(),
+					Updated: time.Now(),
+				}
+
+				_, err = hs.orgService.InsertOrgUser(c.Req.Context(), &orgUser)
+				if err != nil {
+					return response.Error(500, "Failed to insert org user", err)
+				}
+
+				apiResponse := util.DynMap{"message": "Completed successfully, you are now a member of the organization"}
+				hs.userService.SetUsingOrg(c.Req.Context(), &cmd)
+				return response.JSON(http.StatusOK, apiResponse)
+			}
+		}
+
+		_, err = hs.joinRequestService.Create(c.Req.Context(), &createJoinRequestCmd)
+		if err != nil {
+			return response.Error(500, "Failed to create join request", err)
+		}
+
+		apiResponse := util.DynMap{"message": "Completed successfully, wait for Org Admin approval"}
+
+		return response.JSON(http.StatusOK, apiResponse)
+	}
+	return response.Success("Active organization changed")
+}
+
+func (hs *HTTPServer) GetOrgAdmins(c *contextmodel.ReqContext) response.Response {
+	orgID, err := strconv.ParseInt(web.Params(c.Req)[":orgId"], 10, 64)
+	if err != nil {
+		return response.Error(http.StatusBadRequest, "org id is invalid", err)
+	}
+
+	orgAdmins, err := hs.orgService.GetAdminOrgList(c.Req.Context(), orgID)
+	if err != nil {
+		return response.Error(http.StatusBadRequest, "Failed to fetch org admins", err)
+	}
+
+	return response.JSON(http.StatusOK, orgAdmins)
+}
 
 // swagger:parameters searchUsers
 type SearchUsersParams struct {
@@ -740,6 +829,12 @@ type GetSignedInUserTeamListResponse struct {
 	// The response message
 	// in: body
 	Body []*team.TeamDTO `json:"body"`
+}
+
+type GetOrgAdminListResponse struct {
+	// The response message
+	// in: body
+	Body []*org.OrgUser `json:"body"`
 }
 
 // swagger:response helpFlagResponse

@@ -109,6 +109,7 @@ func (hs *HTTPServer) getOrgHelper(ctx context.Context, orgID int64) response.Re
 			State:    orga.State,
 			Country:  orga.Country,
 		},
+		AutoApproveJoinRequests: orga.AutoApproveViewJoinReq,
 	}
 
 	return response.JSON(http.StatusOK, &result)
@@ -252,6 +253,34 @@ func (hs *HTTPServer) UpdateOrgAddress(c *contextmodel.ReqContext) response.Resp
 		return response.Error(http.StatusBadRequest, "orgId is invalid", err)
 	}
 	return hs.updateOrgAddressHelper(c.Req.Context(), form, orgId)
+}
+
+// swagger:route PUT /orgs/{org_id}/autoApprove orgs UpdateOrgAutoApprove
+//
+// Update Organization's auto approve.
+//
+// Responses:
+// 200: okResponse
+// 400: badRequestError
+// 401: unauthorisedError
+// 403: forbiddenError
+// 500: internalServerError
+func (hs *HTTPServer) UpdateOrgAutoApprove(c *contextmodel.ReqContext) response.Response {
+	orgId, err := strconv.ParseInt(web.Params(c.Req)[":orgId"], 10, 64)
+	if err != nil {
+		return response.Error(http.StatusBadRequest, "orgId is invalid", err)
+	}
+	form := org.UpdateOrgAutoApproveCommand{
+		OrgID: orgId,
+	}
+	if err := web.Bind(c.Req, &form); err != nil {
+		return response.Error(http.StatusBadRequest, "bad request data", err)
+	}
+
+	if err := hs.orgService.UpdateAutoApprove(c.Req.Context(), &form); err != nil {
+		return response.Error(http.StatusInternalServerError, "Failed to update org auto approve", err)
+	}
+	return response.Success("Auto Approve Join Requests updated")
 }
 
 func (hs *HTTPServer) updateOrgAddressHelper(ctx context.Context, form dtos.UpdateOrgAddressForm, orgID int64) response.Response {
