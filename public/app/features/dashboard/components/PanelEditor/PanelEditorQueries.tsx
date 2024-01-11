@@ -56,7 +56,7 @@ export class PanelEditorQueries extends PureComponent<Props> {
         type: datasourceSettings?.type,
         uid: datasourceSettings?.uid,
       },
-      queryCachingTTL: datasourceSettings?.cachingConfig?.enabled ? panel.queryCachingTTL : undefined,
+      queryCachingTTL: panel.queryCachingTTL,
       queries: panel.targets,
       maxDataPoints: panel.maxDataPoints,
       minInterval: panel.interval,

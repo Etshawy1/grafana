@@ -186,11 +186,11 @@ export class QueryGroupOptionsEditor extends PureComponent<Props, State> {
   renderQueryCachingTTLOption() {
     const { dataSource, options } = this.props;
 
-    const tooltip = `Cache time-to-live: How long results from this queries in this panel will be cached, in milliseconds. Defaults to the TTL in the caching configuration for this datasource.`;
+    const tooltip = `Cache time-to-live: How long results from this queries in this panel will be cached, in milliseconds.`;
 
-    if (!dataSource.cachingConfig?.enabled) {
-      return null;
-    }
+    // if (!dataSource.cachingConfig?.enabled) {
+    //   return null;
+    // }
 
     return (
       <div className="gf-form-inline">
