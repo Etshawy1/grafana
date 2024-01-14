@@ -999,6 +999,10 @@ export interface Dashboard {
    */
   description?: string;
   /**
+   * Whether a dashboard is eagarly loaded or not.
+   */
+  eagerLoad?: boolean;
+  /**
    * Whether a dashboard is editable or not.
    */
   editable?: boolean;
@@ -1145,6 +1149,7 @@ export interface Dashboard {
 }
 
 export const defaultDashboard: Partial<Dashboard> = {
+  eagerLoad: false,
   editable: true,
   fiscalYearStartMonth: 0,
   graphTooltip: DashboardCursorSync.Off,

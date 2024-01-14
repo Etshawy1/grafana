@@ -704,6 +704,9 @@ type Spec struct {
 	// Description of dashboard.
 	Description *string `json:"description,omitempty"`
 
+	// Whether a dashboard is eagarly loaded or not.
+	EagerLoad *bool `json:"eagerLoad,omitempty"`
+
 	// Whether a dashboard is editable or not.
 	Editable *bool `json:"editable,omitempty"`
 
