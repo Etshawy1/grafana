@@ -220,6 +220,15 @@ type UserDisplayDTO struct {
 	AvatarURL string `json:"avatarUrl"`
 }
 
+type UserJoinRequester struct {
+	ID       int64     `xorm:"pk autoincr 'id'" json:"id"`
+	OrgID    int64     `xorm:"org_id" json:"orgId"`
+	Email    string    `json:"email"`
+	Role     string    `json:"role"`
+	Created  time.Time `json:"created"`
+	Updated  time.Time `json:"updated,omitempty"`
+}
+
 func (e *ErrCaseInsensitiveLoginConflict) Unwrap() error {
 	return ErrCaseInsensitive
 }

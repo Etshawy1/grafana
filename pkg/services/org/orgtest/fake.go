@@ -46,6 +46,10 @@ func (f *FakeOrgService) GetUserOrgList(ctx context.Context, query *org.GetUserO
 	return f.ExpectedUserOrgDTO, f.ExpectedError
 }
 
+func (f *FakeOrgService) GetAdminOrgList(ctx context.Context, orgId int64) ([]*org.AdminOrgDTO, error) {
+	return nil, f.ExpectedError
+}
+
 func (f *FakeOrgService) UpdateOrg(ctx context.Context, cmd *org.UpdateOrgCommand) error {
 	return f.ExpectedError
 }
@@ -67,6 +71,10 @@ func (f *FakeOrgService) CreateWithMember(ctx context.Context, cmd *org.CreateOr
 }
 
 func (f *FakeOrgService) UpdateAddress(ctx context.Context, cmd *org.UpdateOrgAddressCommand) error {
+	return f.ExpectedError
+}
+
+func (f *FakeOrgService) UpdateAutoApprove(ctx context.Context, cmd *org.UpdateOrgAutoApproveCommand) error {
 	return f.ExpectedError
 }
 

@@ -228,7 +228,7 @@ func middlewareScenario(t *testing.T, desc string, fn scenarioFunc, cbs ...func(
 
 		ctxHdlr := getContextHandler(t, cfg, sc.authnService)
 		sc.m.Use(ctxHdlr.Middleware)
-		sc.m.Use(OrgRedirect(sc.cfg, sc.userService))
+		sc.m.Use(OrgRedirect(sc.cfg, sc.userService, sc.orgService))
 
 		sc.defaultHandler = func(c *contextmodel.ReqContext) {
 			require.NotNil(t, c)

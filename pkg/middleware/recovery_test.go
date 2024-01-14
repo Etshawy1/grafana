@@ -70,7 +70,7 @@ func recoveryScenario(t *testing.T, desc string, url string, fn scenarioFunc) {
 		contextHandler := getContextHandler(t, setting.NewCfg(), &authntest.FakeService{ExpectedIdentity: &authn.Identity{}})
 		sc.m.Use(contextHandler.Middleware)
 		// mock out gc goroutine
-		sc.m.Use(OrgRedirect(cfg, usertest.NewUserServiceFake()))
+		sc.m.Use(OrgRedirect(cfg, usertest.NewUserServiceFake(), sc.orgService))
 
 		sc.defaultHandler = func(c *contextmodel.ReqContext) {
 			sc.context = c
