@@ -28,6 +28,7 @@ export const AnnotationTooltip = ({
   const time = timeFormatter(annotation.time);
   const timeEnd = timeFormatter(annotation.timeEnd);
   let text = annotation.text;
+  let login = annotation.login;
   const tags = annotation.tags;
   let alertText = '';
   let avatar;
@@ -78,7 +79,12 @@ export const AnnotationTooltip = ({
       </div>
 
       <div className={styles.body}>
-        {text && <div dangerouslySetInnerHTML={{ __html: textUtil.sanitize(text) }} />}
+        {login && 
+          <div>
+              Added by: {login}
+          </div>
+        }
+        {text && <div dangerouslySetInnerHTML={{ __html: "Description: " + textUtil.sanitize(text) }} />}
         {alertText}
         <>
           <HorizontalGroup spacing="xs" wrap>
