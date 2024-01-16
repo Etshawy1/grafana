@@ -11,7 +11,7 @@ func getGitBranch() string {
 func getGitSha() string {
 	v, err := runError("git", "rev-parse", "--short", "HEAD")
 	if err != nil {
-		return "unknown-dev"
+		return "MAP-Build"
 	}
 	return string(v)
 }
