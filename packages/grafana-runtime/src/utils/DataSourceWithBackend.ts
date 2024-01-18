@@ -237,7 +237,7 @@ class DataSourceWithBackend<
     const dashboardVars = getTemplateSrv().getVariables()
     dashboardVars.forEach((v) => {
       if (v.current.value) {
-        headers[`X-Dashboard-Var-${v.name}`] = v.current.value
+        headers[`X-Dashboard-Var-${v.name.replaceAll("_", "")}`] = v.current.value
       }
     });
     return getBackendSrv()
