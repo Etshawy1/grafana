@@ -74,6 +74,10 @@ type CacheStorage interface {
 	// Optionaly a prefix can be provided to only count items with that prefix
 	// DO NOT USE. Not available for memcached.
 	Count(ctx context.Context, prefix string) (int64, error)
+
+	// DeleteWithPrefix deletes all keys with the given prefix.
+	// DO NOT USE. Not available for memcached.
+	DeleteWithPrefix(ctx context.Context, prefix string) error
 }
 
 // RemoteCache allows Grafana to cache data outside its own process
@@ -117,6 +121,10 @@ func (ds *RemoteCache) Run(ctx context.Context) error {
 
 	<-ctx.Done()
 	return ctx.Err()
+}
+
+func (ds *RemoteCache) DeleteWithPrefix(ctx context.Context, prefix string) error {
+	return ds.client.DeleteWithPrefix(ctx, prefix)
 }
 
 func createClient(opts *setting.RemoteCacheOptions, sqlstore db.DB, secretsService secrets.Service) (cache CacheStorage, err error) {
@@ -177,6 +185,10 @@ func (pcs *encryptedCacheStorage) Count(ctx context.Context, prefix string) (int
 	return pcs.cache.Count(ctx, prefix)
 }
 
+func (pcs *encryptedCacheStorage) DeleteWithPrefix(ctx context.Context, prefix string) error {
+	return nil
+}
+
 type prefixCacheStorage struct {
 	cache  CacheStorage
 	prefix string
@@ -194,4 +206,8 @@ func (pcs *prefixCacheStorage) Delete(ctx context.Context, key string) error {
 
 func (pcs *prefixCacheStorage) Count(ctx context.Context, prefix string) (int64, error) {
 	return pcs.cache.Count(ctx, pcs.prefix+prefix)
+}
+
+func (pcs *prefixCacheStorage) DeleteWithPrefix(ctx context.Context, prefix string) error {
+	return nil
 }

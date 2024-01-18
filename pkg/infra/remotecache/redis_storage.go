@@ -110,3 +110,14 @@ func (s *redisStorage) Count(ctx context.Context, prefix string) (int64, error) 
 
 	return int64(len(cmd.Val())), nil
 }
+
+func (s *redisStorage) DeleteWithPrefix(ctx context.Context, prefix string) error {
+	iter := s.c.Scan(ctx, 0, prefix+"*", 0).Iterator()
+	for iter.Next(ctx) {
+		err := s.c.Del(ctx, iter.Val()).Err()
+		if err != nil {
+			return err
+		}
+	}
+	return iter.Err()
+}

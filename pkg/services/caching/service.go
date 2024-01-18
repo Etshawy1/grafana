@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -81,7 +82,7 @@ func (s *OSSCachingService) HandleQueryRequest(ctx context.Context, req *backend
 
 	// delete from cache or cache disabled
 	if queryCachingTTL == 0 {
-		s.cache.Delete(ctx, cacheKey)
+		s.cache.DeleteWithPrefix(ctx, s.getPanelCacheKeyPrefixFromRequest(req))
 		return false, CachedQueryDataResponse{
 			Response:      nil,
 			UpdateCacheFn: nil,
@@ -165,8 +166,18 @@ func (s *OSSCachingService) getCacheKeyFromRequest(req *backend.QueryDataRequest
 	var queryCachingTTL = s.getQueryCachingTTLFromRequest(req)
 	var startBin = req.Queries[0].TimeRange.From.Truncate(time.Duration(queryCachingTTL * 1000000000))
 	var period = req.Queries[0].TimeRange.To.Sub(req.Queries[0].TimeRange.From).Round(time.Minute).String()
+	var dashboardVars = ""
+	for key, _ := range req.Headers {
+		if strings.HasPrefix(key, "http_X-Dashboard-Var") {
+			dashboardVars += (key[len("http_X-Dashboard-Var")+1:] + ":" + req.Headers[key])
+		}
+	}
 
-	return req.Headers["http_X-Dashboard-Uid"] + "_" + req.Headers["http_X-Datasource-Uid"] + "_" + req.Headers["http_X-Grafana-Org-Id"] + "_" + req.Headers["http_X-Panel-Id"] + "_" + period + "_" + startBin.String()
+	return s.getPanelCacheKeyPrefixFromRequest(req) + "_" + dashboardVars + "_" + period + "_" + startBin.String()
+}
+
+func (s *OSSCachingService) getPanelCacheKeyPrefixFromRequest(req *backend.QueryDataRequest) string {
+	return req.Headers["http_X-Dashboard-Uid"] + "_" + req.Headers["http_X-Datasource-Uid"] + "_" + req.Headers["http_X-Grafana-Org-Id"] + "_" + req.Headers["http_X-Panel-Id"]
 }
 
 func (s *OSSCachingService) getQueryCachingTTLFromRequest(req *backend.QueryDataRequest) float64 {

@@ -2,6 +2,7 @@ package clientmiddleware
 
 import (
 	"context"
+	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 
@@ -42,6 +43,16 @@ func (m *TracingHeaderMiddleware) applyHeaders(ctx context.Context, req backend.
 			continue
 		}
 		req.SetHTTPHeader(headerName, gotVal)
+	}
+
+	for key, _ := range reqCtx.Req.Header {
+		if strings.HasPrefix(key, "X-Dashboard-Var") {
+			gotVal := reqCtx.Req.Header.Get(key)
+			if gotVal == "" {
+				continue
+			}
+			req.SetHTTPHeader(key, gotVal)
+		}
 	}
 }
 

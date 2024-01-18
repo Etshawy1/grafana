@@ -30,6 +30,8 @@ import {
   StreamingFrameOptions,
 } from '../services';
 
+import { getTemplateSrv } from '@grafana/runtime';
+
 import { publicDashboardQueryHandler } from './publicDashboardQueryHandler';
 import { BackendDataSourceResponse, toDataQueryResponse } from './queryResponse';
 
@@ -232,6 +234,12 @@ class DataSourceWithBackend<
     if (request.skipQueryCache) {
       headers[PluginRequestHeaders.SkipQueryCache] = 'true';
     }
+    const dashboardVars = getTemplateSrv().getVariables()
+    dashboardVars.forEach((v) => {
+      if (v.current.value) {
+        headers[`X-Dashboard-Var-${v.name}`] = v.current.value
+      }
+    });
     return getBackendSrv()
       .fetch<BackendDataSourceResponse>({
         url,
