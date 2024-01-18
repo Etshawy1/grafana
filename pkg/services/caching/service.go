@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"sort"
 	"strings"
 	"time"
 
@@ -167,13 +168,18 @@ func (s *OSSCachingService) getCacheKeyFromRequest(req *backend.QueryDataRequest
 	var startBin = req.Queries[0].TimeRange.From.Truncate(time.Duration(queryCachingTTL * 1000000000))
 	var period = req.Queries[0].TimeRange.To.Sub(req.Queries[0].TimeRange.From).Round(time.Minute).String()
 	var dashboardVars = ""
+	var dashboardVarSortedKeys []string
 	for key, _ := range req.Headers {
 		if strings.HasPrefix(key, "http_X-Dashboard-Var") {
-			dashboardVars += (key[len("http_X-Dashboard-Var")+1:] + ":" + req.Headers[key])
+			dashboardVarSortedKeys = append(dashboardVarSortedKeys, key)
 		}
 	}
+	sort.Strings(dashboardVarSortedKeys)
+	for _, key := range dashboardVarSortedKeys {
+		dashboardVars += (key[len("http_X-Dashboard-Var")+1:] + ":" + req.Headers[key] + "_")
+	}
 
-	return s.getPanelCacheKeyPrefixFromRequest(req) + "_" + dashboardVars + "_" + period + "_" + startBin.String()
+	return s.getPanelCacheKeyPrefixFromRequest(req) + "_" + dashboardVars + period + "_" + startBin.String()
 }
 
 func (s *OSSCachingService) getPanelCacheKeyPrefixFromRequest(req *backend.QueryDataRequest) string {
