@@ -275,6 +275,10 @@ export class PanelQueryRunner {
       rangeRaw: timeRange.raw,
     };
 
+    for (const query of queries) {
+      query.nocache = undefined;
+    }
+
     try {
       const ds = await getDataSource(datasource, request.scopedVars);
 

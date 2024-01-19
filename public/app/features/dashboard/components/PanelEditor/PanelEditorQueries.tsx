@@ -106,7 +106,12 @@ export class PanelEditorQueries extends PureComponent<Props> {
 
   onOptionsChange = (options: QueryGroupOptions) => {
     const { panel } = this.props;
-
+    for (const query of this.props.panel.targets) {
+      query.nocache = true;
+    }
+    for (const query of options.queries) {
+      query.nocache = true;
+    }
     panel.updateQueries(options);
 
     if (options.dataSource.uid !== panel.datasource?.uid) {

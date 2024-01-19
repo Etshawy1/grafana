@@ -90,6 +90,14 @@ func (s *OSSCachingService) HandleQueryRequest(ctx context.Context, req *backend
 		}
 	}
 
+	if _, ok := req.Headers["http_X-No-Panel-Cache"]; ok {
+		s.cache.DeleteWithPrefix(ctx, s.getPanelCacheKeyPrefixFromRequest(req))
+		return false, CachedQueryDataResponse{
+			Response:      nil,
+			UpdateCacheFn: s.updateCacheFunction,
+		}
+	}
+
 	// check cache
 	hit, err := s.cache.Get(ctx, cacheKey)
 	if err != nil {
@@ -138,6 +146,22 @@ func (s *OSSCachingService) HandleQueryRequest(ctx context.Context, req *backend
 }
 
 func (s *OSSCachingService) updateCacheFunction(ctx context.Context, res *backend.QueryDataResponse) {
+	for _, response := range res.Responses {
+		if response.Error != nil {
+			backend.Logger.Error("Error in response status, Failed to cache QueryDataResponse", response.Error)
+			return
+		}
+		if response.Frames == nil || len(response.Frames) == 0 {
+			backend.Logger.Error("Failed to cache QueryDataResponse, response.Frames is nil")
+			return
+		}
+		for _, frame := range response.Frames {
+			if frame.Fields == nil || len(frame.Fields) == 0 {
+				backend.Logger.Error("Failed to cache QueryDataResponse, frame.Fields is nil")
+				return
+			}
+		}
+	}
 	encoded, err := json.Marshal(res)
 	if err != nil {
 		backend.Logger.Error("Failed to json encode QueryDataResponse to be cached", err)

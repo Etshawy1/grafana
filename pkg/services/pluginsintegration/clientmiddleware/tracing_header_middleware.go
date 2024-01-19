@@ -53,6 +53,13 @@ func (m *TracingHeaderMiddleware) applyHeaders(ctx context.Context, req backend.
 			}
 			req.SetHTTPHeader(key, gotVal)
 		}
+		if key == "X-No-Panel-Cache" {
+			gotVal := reqCtx.Req.Header.Get(key)
+			if gotVal == "" {
+				continue
+			}
+			req.SetHTTPHeader(key, gotVal)
+		}
 	}
 }
 
