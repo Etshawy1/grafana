@@ -146,6 +146,15 @@ func (s *OSSCachingService) HandleQueryRequest(ctx context.Context, req *backend
 }
 
 func (s *OSSCachingService) updateCacheFunction(ctx context.Context, res *backend.QueryDataResponse) {
+	// check if response is valid
+	if res == nil {
+		backend.Logger.Error("Failed to cache QueryDataResponse, response is nil")
+		return
+	}
+	if res.Responses == nil || len(res.Responses) == 0 {
+		backend.Logger.Error("Failed to cache QueryDataResponse, response.Responses is nil")
+		return
+	}
 	for _, response := range res.Responses {
 		if response.Error != nil {
 			backend.Logger.Error("Error in response status, Failed to cache QueryDataResponse", response.Error)
@@ -162,6 +171,8 @@ func (s *OSSCachingService) updateCacheFunction(ctx context.Context, res *backen
 			}
 		}
 	}
+
+	// json encode and gzip response
 	encoded, err := json.Marshal(res)
 	if err != nil {
 		backend.Logger.Error("Failed to json encode QueryDataResponse to be cached", err)
