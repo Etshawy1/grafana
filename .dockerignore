@@ -4,7 +4,6 @@
 .gitignore
 .vscode
 bin
-data*
 dist
 docker
 Dockerfile

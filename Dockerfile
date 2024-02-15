@@ -63,6 +63,8 @@ COPY kinds kinds
 COPY local local
 COPY packages/grafana-schema packages/grafana-schema
 COPY public/app/plugins public/app/plugins
+COPY data/plugins/geneva data/plugins/geneva
+
 COPY public/api-merged.json public/api-merged.json
 COPY pkg pkg
 COPY scripts scripts
@@ -171,6 +173,7 @@ RUN if [ ! $(getent group "$GF_GID") ]; then \
 COPY --from=go-src /tmp/grafana/bin/grafana* /tmp/grafana/bin/*/grafana* ./bin/
 COPY --from=js-src /tmp/grafana/public ./public
 COPY --from=go-src /tmp/grafana/LICENSE ./
+COPY --from=go-src /tmp/grafana/data/plugins/geneva $GF_PATHS_PLUGINS/geneva
 
 EXPOSE 3000
 
