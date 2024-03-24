@@ -107,12 +107,20 @@ func (f *FakeOrgStore) UpdateAddress(ctx context.Context, cmd *org.UpdateOrgAddr
 	return f.ExpectedError
 }
 
+func (f *FakeOrgStore) UpdateAutoApprove(ctx context.Context, cmd *org.UpdateOrgAutoApproveCommand) error {
+	return f.ExpectedError
+}
+
 func (f *FakeOrgStore) Delete(ctx context.Context, cmd *org.DeleteOrgCommand) error {
 	return f.ExpectedError
 }
 
 func (f *FakeOrgStore) GetUserOrgList(ctx context.Context, query *org.GetUserOrgListQuery) ([]*org.UserOrgDTO, error) {
 	return f.ExpectedUserOrgs, f.ExpectedError
+}
+
+func (f *FakeOrgStore) GetAdminOrgList(ctx context.Context, orgId int64) ([]*org.AdminOrgDTO, error) {
+	return nil, f.ExpectedError
 }
 
 func (f *FakeOrgStore) Search(ctx context.Context, query *org.SearchOrgsQuery) ([]*org.OrgDTO, error) {

@@ -26,12 +26,13 @@ type Org struct {
 	Version int
 	Name    string
 
-	Address1 string
-	Address2 string
-	City     string
-	ZipCode  string
-	State    string
-	Country  string
+	Address1               string
+	Address2               string
+	City                   string
+	ZipCode                string
+	State                  string
+	Country                string
+	AutoApproveViewJoinReq bool `xorm:"auto_approve_view_join_req"`
 
 	Created time.Time
 	Updated time.Time
@@ -79,9 +80,21 @@ type UserOrgDTO struct {
 	Role  RoleType `json:"role"`
 }
 
+type AdminOrgDTO struct {
+	OrgID int64    `json:"orgId" xorm:"org_id"`
+	Name  string   `json:"name"`
+	Role  RoleType `json:"role"`
+	Email string   `json:"email"`
+}
+
 type UpdateOrgCommand struct {
 	Name  string
 	OrgId int64
+}
+
+type UpdateOrgAutoApproveCommand struct {
+	AutoApprove bool
+	OrgID       int64
 }
 
 type SearchOrgsQuery struct {
@@ -201,9 +214,10 @@ type SearchOrgUsersQueryResult struct {
 type ByOrgName []*UserOrgDTO
 
 type OrgDetailsDTO struct {
-	ID      int64   `json:"id"`
-	Name    string  `json:"name"`
-	Address Address `json:"address"`
+	ID                      int64   `json:"id"`
+	Name                    string  `json:"name"`
+	Address                 Address `json:"address"`
+	AutoApproveJoinRequests bool    `json:"autoApproveJoinRequests" default:"false"`
 }
 
 // Len returns the length of an array of organisations.

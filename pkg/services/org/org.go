@@ -9,11 +9,13 @@ type Service interface {
 	InsertOrgUser(context.Context, *OrgUser) (int64, error)
 	DeleteUserFromAll(context.Context, int64) error
 	GetUserOrgList(context.Context, *GetUserOrgListQuery) ([]*UserOrgDTO, error)
+	GetAdminOrgList(context.Context, int64) ([]*AdminOrgDTO, error)
 	UpdateOrg(context.Context, *UpdateOrgCommand) error
 	Search(context.Context, *SearchOrgsQuery) ([]*OrgDTO, error)
 	GetByID(context.Context, *GetOrgByIDQuery) (*Org, error)
 	GetByName(context.Context, *GetOrgByNameQuery) (*Org, error)
 	CreateWithMember(context.Context, *CreateOrgCommand) (*Org, error)
+	UpdateAutoApprove(context.Context, *UpdateOrgAutoApproveCommand) error
 	UpdateAddress(context.Context, *UpdateOrgAddressCommand) error
 	Delete(context.Context, *DeleteOrgCommand) error
 	GetOrCreate(context.Context, string) (int64, error)

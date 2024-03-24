@@ -95,6 +95,7 @@ func (oss *OSSMigrations) AddMigration(mg *Migrator) {
 	AddExternalAlertmanagerToDatasourceMigration(mg)
 
 	addFolderMigrations(mg)
+	addJoinRequesterMigrations(mg)
 	if oss.features != nil && oss.features.IsEnabledGlobally(featuremgmt.FlagExternalServiceAuth) {
 		oauthserver.AddMigration(mg)
 	}
