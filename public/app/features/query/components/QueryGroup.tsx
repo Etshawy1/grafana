@@ -245,6 +245,9 @@ export class QueryGroup extends PureComponent<Props, State> {
   };
 
   onQueriesChange = (queries: DataQuery[] | GrafanaQuery[]) => {
+    for (const query of queries) {
+      query.nocache = true;
+    }
     this.onChange({ queries });
     this.setState({ queries });
   };

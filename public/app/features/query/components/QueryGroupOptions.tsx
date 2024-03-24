@@ -2,7 +2,7 @@ import { css } from '@emotion/css';
 import React, { PureComponent, ChangeEvent, FocusEvent } from 'react';
 
 import { rangeUtil, PanelData, DataSourceApi } from '@grafana/data';
-import { Switch, Input, InlineFormLabel, stylesFactory } from '@grafana/ui';
+import { Switch, Input, InlineFormLabel, stylesFactory, Badge } from '@grafana/ui';
 import { QueryOperationRow } from 'app/core/components/QueryOperationRow/QueryOperationRow';
 import { config } from 'app/core/config';
 import { QueryGroupOptions } from 'app/types';
@@ -186,17 +186,22 @@ export class QueryGroupOptionsEditor extends PureComponent<Props, State> {
   renderQueryCachingTTLOption() {
     const { dataSource, options } = this.props;
 
-    const tooltip = `Cache time-to-live: How long results from this queries in this panel will be cached, in milliseconds. Defaults to the TTL in the caching configuration for this datasource.`;
+    const tooltip = `Cache time-to-live: How long results from this queries in this panel will be cached, in seconds. Set to 0 to Disable caching.`;
 
-    if (!dataSource.cachingConfig?.enabled) {
-      return null;
-    }
+    // if (!dataSource.cachingConfig?.enabled) {
+    //   return null;
+    // }
 
     return (
       <div className="gf-form-inline">
         <div className="gf-form">
           <InlineFormLabel width={9} tooltip={tooltip}>
-            Cache TTL
+            Cache TTL 
+            <Badge
+              color="blue"
+              title="This feature is close to complete but not fully tested"
+              text="Beta"
+            />
           </InlineFormLabel>
           <Input
             type="number"
