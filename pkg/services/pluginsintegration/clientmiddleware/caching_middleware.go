@@ -2,7 +2,6 @@ package clientmiddleware
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/grafana/grafana-aws-sdk/pkg/awsds"
