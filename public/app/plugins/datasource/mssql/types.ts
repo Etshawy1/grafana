@@ -22,6 +22,7 @@ export enum AzureCloud {
 export type ConcealedSecretType = symbol;
 
 export enum AzureAuthType {
+  WorkloadIdentity = 'workloadidentity',
   MSI = 'msi',
   CLIENT_SECRET = 'clientsecret',
 }
