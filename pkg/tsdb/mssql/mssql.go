@@ -265,7 +265,7 @@ func getAzureCredentialDSNFragment(azureCredentials azcredentials.AzureCredentia
 			connStr += fmt.Sprintf("user id=%s;", cfg.Azure.WorkloadIdentitySettings.ClientId)
 		}
 		connStr += fmt.Sprintf("fedauth=%s;",
-			"ActiveDirectoryManagedIdentity")
+			"ActiveDirectoryDefault")
 	case *azcredentials.AzureManagedIdentityCredentials:
 		if cfg.Azure.ManagedIdentityClientId != "" {
 			connStr += fmt.Sprintf("user id=%s;", cfg.Azure.ManagedIdentityClientId)
