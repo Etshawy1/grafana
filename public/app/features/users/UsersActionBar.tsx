@@ -7,13 +7,14 @@ import { contextSrv } from 'app/core/core';
 import { AccessControlAction, StoreState } from 'app/types';
 
 import { selectTotal } from '../invites/state/selectors';
+import { selectTotalRequests } from '../joinRequests/state/selectors';
 
 import { changeSearchQuery } from './state/actions';
 import { getUsersSearchQuery } from './state/selectors';
 
 export interface OwnProps {
-  showInvites: boolean;
-  onShowInvites: () => void;
+  showUserTypes: string;
+  onShowUserTypes: (value: string) => void;
 }
 
 function mapStateToProps(state: StoreState) {
@@ -22,6 +23,7 @@ function mapStateToProps(state: StoreState) {
     pendingInvitesCount: selectTotal(state.invites),
     externalUserMngLinkName: state.users.externalUserMngLinkName,
     externalUserMngLinkUrl: state.users.externalUserMngLinkUrl,
+    joinRequestersCount: selectTotalRequests(state.joinRequests)
   };
 }
 
@@ -39,12 +41,14 @@ export const UsersActionBarUnconnected = ({
   searchQuery,
   pendingInvitesCount,
   changeSearchQuery,
-  onShowInvites,
-  showInvites,
+  onShowUserTypes,
+  showUserTypes,
+  joinRequestersCount
 }: Props): JSX.Element => {
   const options = [
     { label: 'Users', value: 'users' },
     { label: `Pending Invites (${pendingInvitesCount})`, value: 'invites' },
+    { label: `Join Requests (${joinRequestersCount})`, value: 'joinRequests' }
   ];
   const canAddToOrg: boolean = contextSrv.hasPermission(AccessControlAction.OrgUsersAdd);
   // Show invite button in the following cases:
@@ -61,9 +65,9 @@ export const UsersActionBarUnconnected = ({
           placeholder="Search user by login, email or name"
         />
       </InlineField>
-      {pendingInvitesCount > 0 && (
+      {(
         <div style={{ marginLeft: '1rem' }}>
-          <RadioButtonGroup value={showInvites ? 'invites' : 'users'} options={options} onChange={onShowInvites} />
+          <RadioButtonGroup value={showUserTypes} options={options} onChange={onShowUserTypes} />
         </div>
       )}
       {showInviteButton && <LinkButton href="org/users/invite">Invite</LinkButton>}
