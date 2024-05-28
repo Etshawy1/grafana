@@ -30,6 +30,8 @@ import {
   StreamingFrameOptions,
 } from '../services';
 
+import { getTemplateSrv } from '@grafana/runtime';
+
 import { publicDashboardQueryHandler } from './publicDashboardQueryHandler';
 import { BackendDataSourceResponse, toDataQueryResponse } from './queryResponse';
 
@@ -174,6 +176,7 @@ class DataSourceWithBackend<
         dsUIDs.add(datasource.uid);
       }
       return {
+        noCacheQuery: q.nocache,
         ...(shouldApplyTemplateVariables ? this.applyTemplateVariables(q, request.scopedVars, request.filters) : q),
         datasource,
         datasourceId, // deprecated!
@@ -231,6 +234,17 @@ class DataSourceWithBackend<
     }
     if (request.skipQueryCache) {
       headers[PluginRequestHeaders.SkipQueryCache] = 'true';
+    }
+    for (const v of getTemplateSrv().getVariables()) {
+      if (v.current.value) {
+        headers[`X-Dashboard-Var-${v.name.replaceAll("_", "")}`] = v.current.value
+      }
+    }
+
+    for (const query of queries) {
+      if (query.noCacheQuery) {
+        headers[`X-No-Panel-Cache`] = "1";
+      }
     }
     return getBackendSrv()
       .fetch<BackendDataSourceResponse>({
