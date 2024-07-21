@@ -13,6 +13,7 @@ import {
   TextArea,
   Box,
   Stack,
+  Switch
 } from '@grafana/ui';
 import { Page } from 'app/core/components/Page/Page';
 import { FolderPicker } from 'app/core/components/Select/FolderPicker';
@@ -103,6 +104,11 @@ export function GeneralSettingsUnconnected({
     updateWeekStart(weekStart);
   };
 
+  const onEagerLoadChange = () => {
+    dashboard.eagerLoad = !dashboard.eagerLoad;
+    setRenderCounter(renderCounter + 1);
+  }
+
   const onTagsChange = (tags: string[]) => {
     dashboard.tags = tags;
     setRenderCounter(renderCounter + 1);
@@ -185,6 +191,14 @@ export function GeneralSettingsUnconnected({
             <RadioButtonGroup value={dashboard.editable} options={editableOptions} onChange={onEditableChange} />
           </Field>
         </Box>
+
+          <Field label="Eager Load Panels">
+            <Switch
+              id="eager-load-toggle"
+              value={!!dashboard.eagerLoad}
+              onChange={onEagerLoadChange}
+            />
+          </Field>
 
         <TimePickerSettings
           onTimeZoneChange={onTimeZoneChange}
