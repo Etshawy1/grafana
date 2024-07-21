@@ -65,3 +65,7 @@ func (s *memcachedStorage) Count(ctx context.Context, prefix string) (int64, err
 func (s *memcachedStorage) Delete(ctx context.Context, key string) error {
 	return s.c.Delete(key)
 }
+
+func (s *memcachedStorage) DeleteWithPrefix(ctx context.Context, prefix string) error {
+	return ErrNotImplemented
+}
