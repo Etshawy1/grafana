@@ -55,7 +55,7 @@ export function PanelEditorTableView({ width, height, panel, dashboard }: Props)
       : data.errors[0].message
     : data?.error?.message;
   return (
-    <PanelChrome width={width} height={height} padding="none">
+    <PanelChrome width={width} height={height} padding="none" panel={panel}>
       {(innerWidth, innerHeight) => (
         <>
           <PanelHeaderCorner panel={panel} error={errorMessage} />

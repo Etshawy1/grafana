@@ -590,6 +590,7 @@ export class PanelStateWrapper extends PureComponent<Props, State> {
         onOpenMenu={panelChromeProps.onOpenMenu}
         onFocus={() => this.setPanelAttention()}
         onMouseMove={() => this.debouncedSetPanelAttention()}
+        panel={panel}
       >
         {(innerWidth, innerHeight) => (
           <>
