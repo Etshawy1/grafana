@@ -15,6 +15,10 @@ export interface Props {
 
 const authTypeOptions: Array<SelectableValue<AzureAuthType>> = [
   {
+    value: AzureAuthType.WorkloadIdentity,
+    label: 'Workload Identity',
+  },
+  {
     value: AzureAuthType.MSI,
     label: 'Managed Identity',
   },
