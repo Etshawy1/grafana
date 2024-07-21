@@ -110,6 +110,10 @@ func (s *Service) GetUserOrgList(ctx context.Context, query *org.GetUserOrgListQ
 	return s.store.GetUserOrgList(ctx, query)
 }
 
+func (s *Service) GetAdminOrgList(ctx context.Context, orgId int64) ([]*org.AdminOrgDTO, error) {
+	return s.store.GetAdminOrgList(ctx, orgId)
+}
+
 // TODO: refactor service to call store CRUD method
 func (s *Service) UpdateOrg(ctx context.Context, cmd *org.UpdateOrgCommand) error {
 	return s.store.Update(ctx, cmd)
@@ -136,6 +140,11 @@ func (s *Service) CreateWithMember(ctx context.Context, cmd *org.CreateOrgComman
 // TODO: refactor service to call store CRUD method
 func (s *Service) UpdateAddress(ctx context.Context, cmd *org.UpdateOrgAddressCommand) error {
 	return s.store.UpdateAddress(ctx, cmd)
+}
+
+// TODO: refactor service to call store CRUD method
+func (s *Service) UpdateAutoApprove(ctx context.Context, cmd *org.UpdateOrgAutoApproveCommand) error {
+	return s.store.UpdateAutoApprove(ctx, cmd)
 }
 
 // TODO: refactor service to call store CRUD method
