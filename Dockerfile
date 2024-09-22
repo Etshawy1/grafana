@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG BASE_IMAGE=alpine:3.19.1
+ARG BASE_IMAGE=alpine:3.20.3
 ARG JS_IMAGE=node:20-alpine
 ARG JS_PLATFORM=linux/amd64
 ARG GO_IMAGE=golang:1.22.4-alpine
@@ -84,6 +84,8 @@ COPY .github .github
 ENV COMMIT_SHA=${COMMIT_SHA}
 ENV BUILD_BRANCH=${BUILD_BRANCH}
 
+RUN apk add --no-cache --upgrade bash
+
 RUN make build-go GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS}
 
 FROM ${BASE_IMAGE} as tgz-builder
@@ -103,6 +105,9 @@ FROM ${JS_SRC} as js-src
 
 # Final stage
 FROM ${BASE_IMAGE}
+
+RUN apk upgrade --update --no-cache openssl libcrypto3 libssl3 # FIX CVE-2024-5535
+RUN apk upgrade --update --no-cache --available # FIX CVE-2024-5535 CVE-2024-4741
 
 LABEL maintainer="Grafana Labs <hello@grafana.com>"
 
