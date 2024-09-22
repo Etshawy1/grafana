@@ -182,6 +182,8 @@ func (pcs *encryptedCacheStorage) Delete(ctx context.Context, key string) error 
 }
 
 func (pcs *encryptedCacheStorage) Count(ctx context.Context, prefix string) (int64, error) {
+	return pcs.cache.Count(ctx, prefix)
+}
 
 func (pcs *encryptedCacheStorage) DeleteWithPrefix(ctx context.Context, prefix string) error {
 	return nil
@@ -189,6 +191,7 @@ func (pcs *encryptedCacheStorage) DeleteWithPrefix(ctx context.Context, prefix s
 
 type prefixCacheStorage struct {
 	cache  CacheStorage
+	prefix string
 }
 
 func (pcs *prefixCacheStorage) Get(ctx context.Context, key string) ([]byte, error) {
