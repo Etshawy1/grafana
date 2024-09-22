@@ -55,6 +55,10 @@ export const getCredentials = (
   }
 
   switch (credentials.authType) {
+    case AzureAuthType.WorkloadIdentity:
+      return {
+        authType: AzureAuthType.WorkloadIdentity,
+      };
     case AzureAuthType.MSI:
       if (managedIdentityEnabled) {
         return {
@@ -96,6 +100,19 @@ export const updateCredentials = (
   const cloud = bootConfig.azure?.cloud || AzureCloud.Public;
 
   switch (credentials.authType) {
+    case AzureAuthType.WorkloadIdentity:
+      dsSettings = {
+        ...dsSettings,
+        jsonData: {
+          ...dsSettings.jsonData,
+          azureCredentials: {
+            authType: AzureAuthType.WorkloadIdentity,
+          },
+        },
+      };
+
+      return dsSettings;
+
     case AzureAuthType.MSI:
       if (!managedIdentityEnabled) {
         throw new Error('Managed Identity authentication is not enabled in Grafana config.');
