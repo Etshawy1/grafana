@@ -28,6 +28,10 @@ func addOrgMigrations(mg *Migrator) {
 	mg.AddMigration("create org table v1", NewAddTableMigration(orgV1))
 	addTableIndicesMigrations(mg, "v1", orgV1)
 
+	mg.AddMigration("add auto approve view join request column", NewAddColumnMigration(orgV1, &Column{
+		Name: "auto_approve_view_join_req", Type: DB_Bool, Nullable: true,
+	}))
+
 	orgUserV1 := Table{
 		Name: "org_user",
 		Columns: []*Column{
@@ -66,4 +70,5 @@ func addOrgMigrations(mg *Migrator) {
 
 	const migrateReadOnlyViewersToViewers = `UPDATE org_user SET role = 'Viewer' WHERE role = 'Read Only Editor'`
 	mg.AddMigration("Migrate all Read Only Viewers to Viewers", NewRawSQLMigration(migrateReadOnlyViewersToViewers))
+
 }
