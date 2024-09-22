@@ -1,8 +1,6 @@
 package user
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/grafana/grafana/pkg/apimachinery/identity"
