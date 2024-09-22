@@ -590,6 +590,7 @@ export class PanelStateWrapper extends PureComponent<Props, State> {
         onFocus={() => this.setPanelAttention()}
         onMouseEnter={() => this.setPanelAttention()}
         onMouseMove={() => this.debouncedSetPanelAttention()}
+        panel={panel}
       >
         {(innerWidth, innerHeight) => (
           <>
