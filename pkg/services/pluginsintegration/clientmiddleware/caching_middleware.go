@@ -2,7 +2,6 @@ package clientmiddleware
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/grafana/grafana-aws-sdk/pkg/awsds"
@@ -96,25 +95,8 @@ func (m *CachingMiddleware) QueryData(ctx context.Context, req *backend.QueryDat
 
 	// Update the query cache with the result for this metrics request
 	if err == nil && cr.UpdateCacheFn != nil {
-		// If AWS async caching is not enabled, use the old code path
-		if m.features == nil || !m.features.IsEnabled(ctx, featuremgmt.FlagAwsAsyncQueryCaching) {
-			cr.UpdateCacheFn(ctx, resp)
-		} else {
-			// time how long shouldCacheQuery takes
-			startShouldCacheQuery := time.Now()
-			shouldCache := shouldCacheQuery(resp)
-			ShouldCacheQueryHistogram.With(prometheus.Labels{
-				"datasource_type": req.PluginContext.DataSourceInstanceSettings.Type,
-				"cache":           ch,
-				"shouldCache":     strconv.FormatBool(shouldCache),
-				"query_type":      getQueryType(reqCtx),
-			}).Observe(time.Since(startShouldCacheQuery).Seconds())
-
-			// If AWS async caching is enabled and resp is for a running async query, don't cache it
-			if shouldCache {
-				cr.UpdateCacheFn(ctx, resp)
-			}
-		}
+		cacheCtx := context.WithValue(ctx, "req", req)
+		cr.UpdateCacheFn(cacheCtx, resp)
 	}
 
 	return resp, err
