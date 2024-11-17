@@ -228,6 +228,15 @@ type CompleteEmailVerifyCommand struct {
 	Code string
 }
 
+type UserJoinRequester struct {
+	ID       int64     `xorm:"pk autoincr 'id'" json:"id"`
+	OrgID    int64     `xorm:"org_id" json:"orgId"`
+	Email    string    `json:"email"`
+	Role     string    `json:"role"`
+	Created  time.Time `json:"created"`
+	Updated  time.Time `json:"updated,omitempty"`
+}
+
 type Filter interface {
 	WhereCondition() *WhereCondition
 	InCondition() *InCondition
