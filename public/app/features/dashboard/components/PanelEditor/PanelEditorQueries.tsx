@@ -42,7 +42,7 @@ export class PanelEditorQueries extends PureComponent<Props> {
         default: datasourceSettings?.isDefault,
         ...(datasourceSettings ? getDataSourceRef(datasourceSettings) : { type: undefined, uid: undefined }),
       },
-      queryCachingTTL: datasourceSettings?.cachingConfig?.enabled ? panel.queryCachingTTL : undefined,
+      queryCachingTTL: panel.queryCachingTTL,
       queries: panel.targets,
       maxDataPoints: panel.maxDataPoints,
       minInterval: panel.interval,
@@ -92,7 +92,12 @@ export class PanelEditorQueries extends PureComponent<Props> {
 
   onOptionsChange = (options: QueryGroupOptions) => {
     const { panel } = this.props;
-
+    for (const query of this.props.panel.targets) {
+      query.nocache = true;
+    }
+    for (const query of options.queries) {
+      query.nocache = true;
+    }
     panel.updateQueries(options);
 
     if (options.dataSource.uid !== panel.datasource?.uid) {
