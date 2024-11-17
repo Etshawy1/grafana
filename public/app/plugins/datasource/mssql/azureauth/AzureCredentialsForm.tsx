@@ -36,6 +36,10 @@ export const AzureCredentialsForm = (props: Props) => {
 
   const authTypeOptions: Array<SelectableValue<AzureAuthType>> = [
     {
+      value: AzureAuthType.WorkloadIdentity,
+      label: 'Workload Identity',
+    },
+    {
       value: AzureAuthType.CLIENT_SECRET,
       label: 'App Registration',
     },

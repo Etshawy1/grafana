@@ -315,6 +315,12 @@ func generateConnectionString(dsInfo sqleng.DataSourceInfo, azureManagedIdentity
 func getAzureCredentialDSNFragment(azureCredentials azcredentials.AzureCredentials, azureManagedIdentityClientId string, azureEntraPasswordCredentialsEnabled bool) (string, error) {
 	connStr := ""
 	switch c := azureCredentials.(type) {
+	case *azcredentials.AzureWorkloadIdentityCredentials:
+		if cfg.Azure.WorkloadIdentitySettings.ClientId != "" {
+			connStr += fmt.Sprintf("user id=%s;", cfg.Azure.WorkloadIdentitySettings.ClientId)
+		}
+		connStr += fmt.Sprintf("fedauth=%s;",
+			"ActiveDirectoryDefault")
 	case *azcredentials.AzureManagedIdentityCredentials:
 		if azureManagedIdentityClientId != "" {
 			connStr += fmt.Sprintf("user id=%s;", azureManagedIdentityClientId)

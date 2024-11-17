@@ -11,6 +11,8 @@ export const KnownAzureClouds: Array<SelectableValue<AzureCloud>> = [{ value: Az
 
 export function isCredentialsComplete(credentials: AzureCredentialsType): boolean {
   switch (credentials.authType) {
+    case AzureAuthType.WorkloadIdentity:
+      return true;
     case AzureAuthType.MSI:
       return true;
     case AzureAuthType.CLIENT_SECRET:
