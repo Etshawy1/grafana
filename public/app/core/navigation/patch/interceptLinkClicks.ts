@@ -1,14 +1,10 @@
 import { locationUtil, urlUtil } from '@grafana/data';
 import { locationService, navigationLogger } from '@grafana/runtime';
 import { config } from 'app/core/config';
+import { contextSrv } from 'app/core/core';
 
 export function interceptLinkClicks(e: MouseEvent) {
   const anchor = e.target instanceof Element && getParentAnchor(e.target);
-
-  // Ignore if opening new tab or already default prevented
-  if (e.ctrlKey || e.metaKey || e.defaultPrevented) {
-    return;
-  }
 
   if (anchor) {
     let href = anchor.getAttribute('href');
@@ -37,6 +33,9 @@ export function interceptLinkClicks(e: MouseEvent) {
         } else {
           href = `/${href}`;
         }
+      }
+      if (href.indexOf("orgId") === -1) {
+        href = urlUtil.appendQueryToUrl(href, `orgId=${config.bootData.user.orgId||contextSrv.user.orgId}`);
       }
       locationService.push(href);
     }
