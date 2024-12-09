@@ -19,7 +19,10 @@ var (
 	enabled = true
 	allow_sign_up = false
 	auto_login = true
+	client_authentication = test_client_authentication
 	client_id = test_client_id
+	managed_identity_client_id = test_managed_identity_client_id
+	audience = test_audience
 	client_secret = test_client_secret
 	scopes = openid, profile, email
 	empty_scopes = false
@@ -62,7 +65,10 @@ var (
 		"enabled":                    true,
 		"allow_sign_up":              false,
 		"auto_login":                 true,
+		"client_authentication":      "test_client_authentication",
 		"client_id":                  "test_client_id",
+		"managed_identity_client_id": "test_managed_identity_client_id",
+		"audience":                   "test_audience",
 		"client_secret":              "test_client_secret",
 		"scopes":                     "openid, profile, email",
 		"empty_scopes":               false,
@@ -204,7 +210,7 @@ func TestGetProviderConfig_GrafanaComGrafanaNet(t *testing.T) {
 			[auth.grafana_com]
 			enabled = true
 			client_id = grafanaComClientId
-			
+
 			[auth.grafananet]
 			enabled = false
 			client_id = grafanaNetClientId`,
@@ -219,7 +225,7 @@ func TestGetProviderConfig_GrafanaComGrafanaNet(t *testing.T) {
 			[auth.grafana_com]
 			enabled = false
 			client_id = grafanaComClientId
-			
+
 			[auth.grafananet]
 			enabled = true
 			client_id = grafanaNetClientId`,
@@ -234,7 +240,7 @@ func TestGetProviderConfig_GrafanaComGrafanaNet(t *testing.T) {
 			[auth.grafana_com]
 			enabled = true
 			client_id = grafanaComClientId
-			
+
 			[auth.grafananet]
 			enabled = true
 			client_id = grafanaNetClientId`,
@@ -249,7 +255,7 @@ func TestGetProviderConfig_GrafanaComGrafanaNet(t *testing.T) {
 			[auth.grafana_com]
 			enabled = false
 			client_id = grafanaComClientId
-			
+
 			[auth.grafananet]
 			enabled = false
 			client_id = grafanaNetClientId`,
