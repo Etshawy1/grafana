@@ -19,6 +19,7 @@ import { PanelDescription } from './PanelDescription';
 import { PanelMenu } from './PanelMenu';
 import { PanelStatus } from './PanelStatus';
 import { TitleItem } from './TitleItem';
+import { PanelModel } from '../../../../../public/app/features/dashboard/state';
 
 /**
  * @internal
@@ -66,6 +67,8 @@ interface BaseProps {
    */
   onMouseMove?: () => void;
   onMouseEnter?: () => void;
+
+  panel?: PanelModel;
 }
 
 interface FixedDimensions extends BaseProps {
@@ -134,6 +137,7 @@ export function PanelChrome({
   onFocus,
   onMouseMove,
   onMouseEnter,
+  panel
 }: PanelChromeProps) {
   const theme = useTheme2();
   const styles = useStyles2(getStyles);
@@ -151,6 +155,8 @@ export function PanelChrome({
 
   // hover menu is only shown on hover when not on touch devices
   const showOnHoverClass = 'show-on-hover';
+  const displayOnHoverClass = 'display-on-hover';
+
   const isPanelTransparent = displayMode === 'transparent';
 
   const headerHeight = getHeaderHeight(theme, hasHeader);
@@ -228,9 +234,17 @@ export function PanelChrome({
         <PanelDescription description={description} className={dragClassCancel} />
         {titleItems}
       </div>
+
+      {panel && (loadingState === LoadingState.Done || loadingState === LoadingState.Error) && (
+        <Tooltip content="Refresh Panel">
+          <TitleItem className={cx(dragClassCancel, displayOnHoverClass)} onClick={() => panel.refresh()}>
+            <Icon name="sync"/>
+          </TitleItem>
+        </Tooltip>
+      )}
       {loadingState === LoadingState.Streaming && (
         <Tooltip content={onCancelQuery ? 'Stop streaming' : 'Streaming'}>
-          <TitleItem className={dragClassCancel} data-testid="panel-streaming" onClick={onCancelQuery}>
+          <TitleItem className={cx(dragClassCancel, displayOnHoverClass)} data-testid="panel-streaming" onClick={onCancelQuery}>
             <Icon name="circle-mono" size="md" className={styles.streaming} />
           </TitleItem>
         </Tooltip>
@@ -239,7 +253,7 @@ export function PanelChrome({
         <DelayRender delay={2000}>
           <Tooltip content="Cancel query">
             <TitleItem
-              className={cx(dragClassCancel, styles.pointer)}
+              className={cx(dragClassCancel, styles.pointer, displayOnHoverClass)}
               data-testid="panel-cancel-query"
               onClick={onCancelQuery}
             >
@@ -395,11 +409,20 @@ const getStyles = (theme: GrafanaTheme2) => {
         visibility: 'hidden',
       },
 
+      '.display-on-hover': {
+        opacity: '0',
+        display: 'none',
+      },
+
       '&:focus-visible, &:hover': {
         // only show menu icon on hover or focused panel
         '.show-on-hover': {
           opacity: '1',
           visibility: 'visible',
+        },
+        '.display-on-hover': {
+          opacity: '1',
+          display: 'block',
         },
       },
 
@@ -409,6 +432,10 @@ const getStyles = (theme: GrafanaTheme2) => {
       '&:focus-within:not(:focus)': {
         '.show-on-hover': {
           visibility: 'visible',
+          opacity: '1',
+        },
+        '.display-on-hover': {
+          display: 'block',
           opacity: '1',
         },
       },
