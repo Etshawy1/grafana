@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { useAsyncFn } from 'react-use';
 
 import { renderMarkdown } from '@grafana/data';
 import { Alert } from '@grafana/ui';
+import { getBackendSrv } from '@grafana/runtime';
 import { Page } from 'app/core/components/Page/Page';
 import { contextSrv } from 'app/core/core';
 import { OrgUser, OrgRole, StoreState } from 'app/types';
@@ -11,6 +13,9 @@ import { OrgUsersTable } from '../admin/Users/OrgUsersTable';
 import InviteesTable from '../invites/InviteesTable';
 import { fetchInvitees } from '../invites/state/actions';
 import { selectInvitesMatchingQuery } from '../invites/state/selectors';
+import JoinRequestersTable from '../joinRequests/JoinRequestersTable';
+import { fetchJoinRequesters } from '../joinRequests/state/actions';
+import { selectJoinRequestersMatchingQuery } from '../joinRequests/state/selectors';
 
 import { UsersActionBar } from './UsersActionBar';
 import { loadUsers, removeUser, updateUser, changePage, changeSort } from './state/actions';
@@ -25,6 +30,7 @@ function mapStateToProps(state: StoreState) {
     totalPages: state.users.totalPages,
     perPage: state.users.perPage,
     invitees: selectInvitesMatchingQuery(state.invites, searchQuery),
+    joinRequesters: selectJoinRequestersMatchingQuery(state.joinRequests, searchQuery),
     externalUserMngInfo: state.users.externalUserMngInfo,
     isLoading: state.users.isLoading,
     rolesLoading: state.users.rolesLoading,
@@ -34,6 +40,7 @@ function mapStateToProps(state: StoreState) {
 const mapDispatchToProps = {
   loadUsers,
   fetchInvitees,
+  fetchJoinRequesters,
   changePage,
   changeSort,
   updateUser,
@@ -45,7 +52,7 @@ const connector = connect(mapStateToProps, mapDispatchToProps);
 export type Props = ConnectedProps<typeof connector>;
 
 export interface State {
-  showInvites: boolean;
+  showUserTypes: string;
 }
 
 export const UsersListPageUnconnected = ({
@@ -53,23 +60,28 @@ export const UsersListPageUnconnected = ({
   page,
   totalPages,
   invitees,
+  joinRequesters,
   externalUserMngInfo,
   isLoading,
   rolesLoading,
   loadUsers,
   fetchInvitees,
+  fetchJoinRequesters,
   changePage,
   updateUser,
   removeUser,
   changeSort,
 }: Props) => {
-  const [showInvites, setShowInvites] = useState(false);
+  const [showUserTypes, setshowUserTypes] = useState("users");
+  const [activeOrg, fetchOrg] = useAsyncFn(async () =>{ return await getBackendSrv().get(`/api/orgs/${contextSrv.user.orgId}`)}, []);
   const externalUserMngInfoHtml = externalUserMngInfo ? renderMarkdown(externalUserMngInfo) : '';
 
   useEffect(() => {
     loadUsers();
     fetchInvitees();
-  }, [fetchInvitees, loadUsers]);
+    fetchJoinRequesters();
+    fetchOrg();
+  }, [fetchJoinRequesters, fetchInvitees, loadUsers, fetchOrg]);
 
   const onRoleChange = (role: OrgRole, user: OrgUser) => {
     updateUser({ ...user, role: role });
@@ -77,17 +89,28 @@ export const UsersListPageUnconnected = ({
 
   const onRemoveUser = (user: OrgUser) => removeUser(user.userId);
 
-  const onShowInvites = () => {
-    setShowInvites(!showInvites);
+  const onShowUserTypes = (value: string) => {
+    setshowUserTypes(value);
+    loadUsers();
+    fetchInvitees();
+    fetchJoinRequesters();
   };
 
   const onUserRolesChange = () => {
     loadUsers();
   };
+  const onSwitchAutoApproveJoinRequests = () => {
+    getBackendSrv().put(`/api/orgs/${contextSrv.user.orgId}/autoApprove`, {autoApprove: !activeOrg.value.autoApproveJoinRequests})
+    .then(() => {
+      fetchOrg();
+    });
+  }
 
   const renderTable = () => {
-    if (showInvites) {
+    if (showUserTypes === 'invites') {
       return <InviteesTable invitees={invitees} />;
+    } else if(showUserTypes === 'joinRequests') {
+      return <JoinRequestersTable joinRequesters={joinRequesters} org={activeOrg} onSwitch={onSwitchAutoApproveJoinRequests}/>
     } else {
       return (
         <OrgUsersTable
@@ -108,7 +131,7 @@ export const UsersListPageUnconnected = ({
 
   return (
     <Page.Contents isLoading={!isLoading}>
-      <UsersActionBar onShowInvites={onShowInvites} showInvites={showInvites} />
+      <UsersActionBar onShowUserTypes={onShowUserTypes} showUserTypes={showUserTypes} />
       {externalUserMngInfoHtml && (
         <Alert severity="info" title="">
           <div dangerouslySetInnerHTML={{ __html: externalUserMngInfoHtml }} />
