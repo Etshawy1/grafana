@@ -12,6 +12,7 @@ awsconfig
 /e2e/tmp
 /scripts/grafana-server/tmp
 vendor/
+geneva/
 /docs/menu.yaml
 /requests
 tsconfig.tsbuildinfo
