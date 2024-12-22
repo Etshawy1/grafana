@@ -69,7 +69,7 @@ type OAuthInfo struct {
 	AutoLogin                   bool              `mapstructure:"auto_login" toml:"auto_login"`
 	ClientAuthentication        string            `mapstructure:"client_authentication" toml:"client_authentication"`
 	ManagedIdentityClientID     string            `mapstructure:"managed_identity_client_id" toml:"managed_identity_client_id"`
-	FederatedCredentialAudience string            `mapstructure:"audience" toml:"audience"`
+	FederatedCredentialAudience string            `mapstructure:"federated_credential_audience" toml:"federated_credential_audience"`
 	ClientId                    string            `mapstructure:"client_id" toml:"client_id"`
 	ClientSecret                string            `mapstructure:"client_secret" toml:"-"`
 	EmailAttributeName          string            `mapstructure:"email_attribute_name" toml:"email_attribute_name"`
