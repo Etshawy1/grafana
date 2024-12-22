@@ -236,38 +236,6 @@ func (s *SocialAzureAD) managedIdentityCallback(ctx context.Context) (string, er
 	return tk.Token, nil
 }
 
-// ManagedIdentityCallback retrieves a token using the managed identity credential of the Azure service.
-func (s *SocialAzureAD) ManagedIdentityCallback(ctx context.Context, oauthCfg social.OAuthInfo) (string, error) {
-	// Validate required fields for Managed Identity authentication
-	if oauthCfg.ManagedIdentityClientID == "" {
-		return "", fmt.Errorf("ManagedIdentityClientID is required for Managed Identity authentication")
-	}
-	if oauthCfg.Audience == "" {
-		return "", fmt.Errorf("audience is required for Managed Identity authentication")
-	}
-	if err := validateAudience(oauthCfg.Audience); err != nil {
-		return "", err
-	}
-
-	// Prepare Managed Identity Credential
-	mic, err := azidentity.NewManagedIdentityCredential(&azidentity.ManagedIdentityCredentialOptions{
-		ID: azidentity.ClientID(oauthCfg.ManagedIdentityClientID),
-	})
-	if err != nil {
-		return "", fmt.Errorf("error constructing managed identity credential: %w", err)
-	}
-
-	// Request token and return
-	tk, err := mic.GetToken(ctx, policy.TokenRequestOptions{
-		Scopes: []string{fmt.Sprintf("%s/.default", oauthCfg.Audience)},
-	})
-	if err != nil {
-		return "", fmt.Errorf("error getting managed identity token: %w", err)
-	}
-
-	return tk.Token, nil
-}
-
 func (s *SocialAzureAD) Reload(ctx context.Context, settings ssoModels.SSOSettings) error {
 	newInfo, err := CreateOAuthInfoFromKeyValues(settings.Settings)
 	if err != nil {
