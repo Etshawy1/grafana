@@ -9,8 +9,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-
 	alertingReceivers "github.com/grafana/alerting/receivers"
+	"strings"
+	"time"
 
 	"github.com/grafana/grafana/pkg/util"
 )
@@ -68,6 +69,31 @@ func (ns *NotificationService) sendWebRequestSync(ctx context.Context, webhook *
 	}
 
 	for k, v := range webhook.HttpHeader {
+		if k == "Authorization" && strings.Contains(v, "|") {
+			hds := strings.Split(v, "|")
+			for _, hd := range hds {
+				if strings.Contains(hd, ":") {
+					kvs := strings.Split(hd, ":")
+					if len(kvs) == 2 {
+						if strings.Contains(kvs[0], "Bearer ") {
+							kvs[0] = strings.TrimPrefix(kvs[0], "Bearer ")
+						}
+						request.Header.Set(kvs[0], kvs[1])
+					}
+				}
+			}
+			continue
+		}
+		if k == "Authorization" && strings.Contains(v, ":") {
+			kvs := strings.Split(v, ":")
+			if len(kvs) == 2 {
+				if strings.Contains(kvs[0], "Bearer ") {
+					kvs[0] = strings.TrimPrefix(kvs[0], "Bearer ")
+				}
+				request.Header.Set(kvs[0], kvs[1])
+			}
+			continue
+		}
 		request.Header.Set(k, v)
 	}
 
