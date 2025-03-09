@@ -150,7 +150,7 @@ export class PanelDataQueriesTab extends SceneObjectBase<PanelDataQueriesTabStat
 
     return {
       cacheTimeout: dsSettings?.meta.queryOptions?.cacheTimeout ? queryRunner.state.cacheTimeout : undefined,
-      queryCachingTTL: dsSettings?.cachingConfig?.enabled ? queryRunner.state.queryCachingTTL : undefined,
+      queryCachingTTL: queryRunner.state.queryCachingTTL,
       dataSource: {
         default: dsSettings?.isDefault,
         ...(dsSettings ? getDataSourceRef(dsSettings) : { type: undefined, uid: undefined }),
