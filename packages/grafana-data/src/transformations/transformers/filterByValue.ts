@@ -83,6 +83,35 @@ export const filterByValueTransformer: DataTransformerInfo<FilterByValueTransfor
               value = ctx.interpolate(value);
             }
 
+            if (/\{.*\}/.test(value)) {
+              const valuesFromString = value.slice(1).slice(0, -1).split(',');
+              for (let i = 0; i < valuesFromString.length; i++) {
+                interpolatedFilters.push({
+                  ...filter,
+                  config: {
+                    ...filter.config,
+                    options: {
+                      ...filter.config.options,
+                      value: valuesFromString[i].trim(),
+                    },
+                  },
+                } )
+              }
+            }
+            const valuesFromString = value.split(',');
+            for (let i = 0; i < valuesFromString.length; i++) {
+              interpolatedFilters.push({
+                ...filter,
+                config: {
+                  ...filter.config,
+                  options: {
+                    ...filter.config.options,
+                    value: valuesFromString[i].trim(),
+                  },
+                },
+              })
+            }
+
             return {
               ...filter,
               config: { ...filter.config, options: { ...filter.config.options, value } },
