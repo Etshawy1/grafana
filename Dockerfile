@@ -113,6 +113,8 @@ COPY .github .github
 ENV COMMIT_SHA=${COMMIT_SHA}
 ENV BUILD_BRANCH=${BUILD_BRANCH}
 
+RUN apk add --no-cache --upgrade bash
+
 RUN make build-go GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS}
 
 # From-tarball build stage
@@ -133,6 +135,9 @@ FROM ${JS_SRC} AS js-src
 
 # Final stage
 FROM ${BASE_IMAGE}
+
+RUN apk upgrade --update --no-cache openssl libcrypto3 libssl3 # FIX CVE-2024-5535
+RUN apk upgrade --update --no-cache --available # FIX CVE-2024-5535 CVE-2024-4741
 
 LABEL maintainer="Grafana Labs <hello@grafana.com>"
 LABEL org.opencontainers.image.source="https://github.com/grafana/grafana"
