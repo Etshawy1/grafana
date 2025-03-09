@@ -118,6 +118,10 @@ export const AzureCredentialsForm = (props: Props) => {
       value: 'clientsecret',
       label: 'App Registration',
     },
+    {
+      value: 'workloadidentity',
+      label: 'Workload Identity',
+    }
   ];
   if (managedIdentityEnabled) {
     authTypeOptions.push({
