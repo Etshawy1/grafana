@@ -239,7 +239,7 @@ export function createDashboardSceneFromDashboardModel(oldModel: DashboardModel,
   const dashboardScene = new DashboardScene({
     description: oldModel.description,
     editable: oldModel.editable,
-    preload: dto.preload ?? false,
+    preload: (dto.preload || oldModel.eagerLoad) ?? false,
     id: oldModel.id,
     isDirty: false,
     links: oldModel.links || [],
@@ -250,7 +250,7 @@ export function createDashboardSceneFromDashboardModel(oldModel: DashboardModel,
     version: oldModel.version,
     body: new DefaultGridLayoutManager({
       grid: new SceneGridLayout({
-        isLazy: !(dto.preload || contextSrv.user.authenticatedBy === 'render'),
+        isLazy: (dto.preload || oldModel.eagerLoad || contextSrv.user.authenticatedBy === 'render') ? false : true,
         children: createSceneObjectsForPanels(oldModel.panels),
         $behaviors: [trackIfEmpty],
       }),
