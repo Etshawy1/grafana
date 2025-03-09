@@ -11,7 +11,6 @@ import (
 	"net/url"
 	alertingReceivers "github.com/grafana/alerting/receivers"
 	"strings"
-	"time"
 
 	"github.com/grafana/grafana/pkg/util"
 )
