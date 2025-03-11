@@ -1,5 +1,6 @@
 import React, { useEffect }  from 'react';
 import { connect } from 'react-redux';
+import { useParams } from 'react-router-dom-v5-compat';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 
 import { NavModelItem } from '@grafana/data';
@@ -42,7 +43,7 @@ export interface JoinOrgPageRouteParams {
 
 const connector = connect(undefined, mapDispatchToProps);
 
-export interface Props extends GrafanaRouteComponentProps<JoinOrgPageRouteParams> {}
+export interface Props extends Omit<GrafanaRouteComponentProps<JoinOrgPageRouteParams>, 'match'> {}
 
 const pageNav: NavModelItem = {
   icon: 'building',
@@ -50,15 +51,18 @@ const pageNav: NavModelItem = {
   text: 'Organization Join Request',
 };
 
-export const NewOrgPage = ({ match, location }: Props) => {
+export const NewOrgPage = ({ location }: Props) => {
   const notifyApp = useAppNotification();
 
-  const [OrgAdminsState, fetchOrgAdmins] = useAsyncFn(async () =>{ return await getBackendSrv().get(`/api/user/orgAdmins/${match.params.orgId}`)}, []);
+  const params = useParams();
+  const { orgId } = params;
+
+  const [OrgAdminsState, fetchOrgAdmins] = useAsyncFn(async () =>{ return await getBackendSrv().get(`/api/user/orgAdmins/${orgId}`)}, []);
   useEffect(() => {fetchOrgAdmins();}, [fetchOrgAdmins]);
 
   const onSubmit = async (formData: FormModel) => {
     await getBackendSrv()
-      .post(`/api/user/joinRequest/${match.params.orgId}`, formData)
+      .post(`/api/user/joinRequest/${orgId}`, formData)
       .then(() => {
         window.setTimeout(function(){
           window.location.assign(getConfig().appSubUrl + '/');
@@ -75,7 +79,7 @@ export const NewOrgPage = ({ match, location }: Props) => {
     <Page navId="home" pageNav={pageNav}>
       <Page.Contents>
         <p className="muted">
-          Do you want to submit request to join organization with id = {match.params.orgId}?
+          Do you want to submit request to join organization with id = {orgId}?
         </p>
         <p className="muted">
           Notes:
@@ -90,7 +94,7 @@ export const NewOrgPage = ({ match, location }: Props) => {
           {OrgAdminsState.loading && 'Fetching Organization Admins...'}
           {OrgAdminsState.value && (
             <p className="muted">
-              Organization {OrgAdminsState.value[0].name} with id={match.params.orgId} Admins Include:
+              Organization {OrgAdminsState.value[0].name} with id={orgId} Admins Include:
               <ul style={{marginLeft: 25}}>
               {OrgAdminsState.value.map((admin: any) => (
                 <li key={admin.email}>{admin.email}</li>
