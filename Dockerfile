@@ -82,7 +82,7 @@ COPY apps/alerting/notifications/go.* apps/alerting/notifications/
 COPY pkg/codegen/go.* pkg/codegen/
 COPY pkg/plugins/codegen/go.* pkg/plugins/codegen/
 
-RUN go mod download && \
+RUN sleep 240; go mod download && \
     if [[ "$BINGO" = "true" ]]; then \
       go install github.com/bwplotka/bingo@latest && \
       bingo get -v; \
