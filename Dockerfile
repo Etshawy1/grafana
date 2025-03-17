@@ -212,7 +212,7 @@ RUN if [ ! $(getent group "$GF_GID") ]; then \
     chmod -R 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING"
 
 COPY --from=go-src /tmp/grafana/bin/grafana* /tmp/grafana/bin/*/grafana* ./bin/
-# COPY --from=go-src /tmp/grafana/geneva "$GF_PATHS_PLUGINS"/geneva
+COPY --from=go-src /tmp/grafana/geneva "$GF_PATHS_PLUGINS"/geneva
 COPY --from=js-src /tmp/grafana/public ./public
 COPY --from=js-src /tmp/grafana/LICENSE ./
 
