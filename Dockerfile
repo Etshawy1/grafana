@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.4
 
 # to maintain formatting of multiline commands in vscode, add the following to settings.json:
 # "docker.languageserver.formatter.ignoreMultilineInstructions": true
@@ -27,16 +27,19 @@ COPY LICENSE ./
 COPY conf/defaults.ini ./conf/defaults.ini
 COPY e2e e2e
 
-RUN apk add --no-cache make build-base python3
-
-RUN yarn install --immutable
+# Install dependencies and clean cache in the same layer
+RUN apk add --no-cache make build-base python3 && \
+    yarn install --immutable --frozen-lockfile && \
+    yarn cache clean
 
 COPY tsconfig.json eslint.config.js .editorconfig .browserslistrc .prettierrc.js ./
 COPY scripts scripts
 COPY emails emails
 
 ENV NODE_ENV=production
-RUN yarn build
+RUN yarn build && \
+    rm -rf node_modules/.cache && \
+    find . -name "*.map" -delete
 
 # Golang build stage
 FROM ${GO_IMAGE} AS go-builder
@@ -47,17 +50,15 @@ ARG GO_BUILD_TAGS="oss"
 ARG WIRE_TAGS="oss"
 ARG BINGO="true"
 
+# Install dependencies and clean in same layer
 RUN if grep -i -q alpine /etc/issue; then \
-  apk add --no-cache \
-  # This is required to allow building on arm64 due to https://github.com/golang/go/issues/22040
-  binutils-gold \
-  bash \
-  # Install build dependencies
-  gcc g++ make git; \
-  fi
+      apk add --no-cache binutils-gold bash gcc g++ make git && \
+      rm -rf /var/cache/apk/*; \
+    fi
 
 WORKDIR /tmp/grafana
 
+# Copy only what's needed for dependency download first
 COPY go.* ./
 COPY .bingo .bingo
 COPY .citools/bra .citools/bra
@@ -92,11 +93,12 @@ COPY apps/alerting/notifications apps/alerting/notifications
 COPY pkg/codegen pkg/codegen
 COPY pkg/plugins/codegen pkg/plugins/codegen
 
-RUN go mod download
-RUN if [[ "$BINGO" = "true" ]]; then \
-  go install github.com/bwplotka/bingo@latest && \
-  bingo get -v; \
-  fi
+RUN go mod download && \
+    if [[ "$BINGO" = "true" ]]; then \
+      go install github.com/bwplotka/bingo@latest && \
+      bingo get -v; \
+    fi && \
+    rm -rf /root/.cache/go-build
 
 COPY embed.go Makefile build.go package.json ./
 COPY cue.mod cue.mod
@@ -113,9 +115,13 @@ COPY .github .github
 ENV COMMIT_SHA=${COMMIT_SHA}
 ENV BUILD_BRANCH=${BUILD_BRANCH}
 
-RUN apk add --no-cache --upgrade bash
-
-RUN make build-go GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS}
+# Build and clean up in one layer
+RUN apk add --no-cache --upgrade bash && \
+    make build-go GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS} && \
+    rm -rf /root/.cache && \
+    find . -name "*.go" -type f -not -path "./bin/*" -delete && \
+    find . -name "go.mod" -delete && \
+    find . -name "go.sum" -delete
 
 # From-tarball build stage
 FROM ${BASE_IMAGE} AS tgz-builder
