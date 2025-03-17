@@ -22,3 +22,16 @@ node_modules
 !.yarn/plugins
 !.yarn/versions
 !.yarn/cache
+
+# Build artifacts
+node_modules
+dist
+build
+coverage
+
+# Test files
+*_test.go
+*_mock.go
+__tests__
+*_spec.ts
+*_spec.js
