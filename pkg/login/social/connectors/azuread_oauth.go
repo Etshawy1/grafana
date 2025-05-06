@@ -4,10 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"mime"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
@@ -211,6 +217,242 @@ func (s *SocialAzureAD) Exchange(ctx context.Context, code string, authOptions .
 
 	// Default token exchange
 	return s.Config.Exchange(ctx, code, authOptions...)
+}
+
+func (s *SocialAzureAD) TokenSource(ctx context.Context, t *oauth2.Token) oauth2.TokenSource {
+	s.reloadMutex.RLock()
+	defer s.reloadMutex.RUnlock()
+
+	tkr := &assertionTokenRefresher{
+		ctx:  ctx,
+		conf: s.Config,
+	}
+	if t != nil {
+		tkr.t = t
+	}
+	clientAssertion, _ := s.managedIdentityCallback(ctx)
+
+	tkr.clientAssertion = clientAssertion
+
+	return tkr
+}
+
+type assertionTokenRefresher struct {
+	ctx             context.Context // used to get HTTP requests
+	conf            *oauth2.Config
+	mu              sync.Mutex // guards t
+	t               *oauth2.Token
+	clientAssertion string
+}
+
+// WARNING: Token is not safe for concurrent access, as it
+// updates the tokenRefresher's refreshToken field.
+// Within this package, it is used by reuseTokenSource which
+// synchronizes calls to this method with its own mutex.
+func (tf *assertionTokenRefresher) Token() (*oauth2.Token, error) {
+	tf.mu.Lock()
+	defer tf.mu.Unlock()
+
+	if tf.t.Valid() {
+		return tf.t, nil
+	}
+
+	if tf.t.RefreshToken == "" {
+		return nil, errors.New("oauth2: token expired and refresh token is not set")
+	}
+
+	if tf.clientAssertion == "" {
+		return nil, errors.New("oauth2: failed to get client assertion for token refresh")
+	}
+
+	tk, err := retrieveToken(tf.ctx, tf.conf, url.Values{
+		"grant_type":            {"refresh_token"},
+		"refresh_token":         {tf.t.RefreshToken},
+		"client_assertion":      {tf.clientAssertion},
+		"client_assertion_type": {"urn:ietf:params:oauth:client-assertion-type:jwt-bearer"},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// update the current token
+	tf.t = tk
+
+	return tk, err
+}
+
+func retrieveToken(ctx context.Context, c *oauth2.Config, v url.Values) (*oauth2.Token, error) {
+	clientID := c.ClientID
+	clientSecret := c.ClientSecret
+	tokenURL := c.Endpoint.TokenURL
+	authStyle := c.Endpoint.AuthStyle
+	needsAuthStyleProbe := c.Endpoint.AuthStyle == 0
+	if needsAuthStyleProbe {
+		authStyle = oauth2.AuthStyleInHeader // the first way we'll try
+	}
+	req, err := newTokenRequest(tokenURL, clientID, clientSecret, v, authStyle)
+	if err != nil {
+		return nil, err
+	}
+	token, err := doTokenRoundTrip(ctx, req)
+	if err != nil && needsAuthStyleProbe {
+		authStyle = oauth2.AuthStyleInParams // the second way we'll try
+		req, _ = newTokenRequest(tokenURL, clientID, clientSecret, v, authStyle)
+		token, err = doTokenRoundTrip(ctx, req)
+	}
+	if needsAuthStyleProbe && err == nil {
+		c.Endpoint.AuthStyle = authStyle
+	}
+	// Don't overwrite `RefreshToken` with an empty value
+	// if this was a token refreshing request.
+	if token != nil && token.RefreshToken == "" {
+		token.RefreshToken = v.Get("refresh_token")
+	}
+	return token, err
+}
+
+type AuthStyle int
+
+func newTokenRequest(tokenURL, clientID, clientSecret string, v url.Values, authStyle oauth2.AuthStyle) (*http.Request, error) {
+	if authStyle == oauth2.AuthStyleInParams {
+		v = cloneURLValues(v)
+		if clientID != "" {
+			v.Set("client_id", clientID)
+		}
+		if clientSecret != "" {
+			v.Set("client_secret", clientSecret)
+		}
+	}
+	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(v.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if authStyle == oauth2.AuthStyleInHeader {
+		req.SetBasicAuth(url.QueryEscape(clientID), url.QueryEscape(clientSecret))
+	}
+	return req, nil
+}
+
+func cloneURLValues(v url.Values) url.Values {
+	v2 := make(url.Values, len(v))
+	for k, vv := range v {
+		v2[k] = append([]string(nil), vv...)
+	}
+	return v2
+}
+
+func doTokenRoundTrip(ctx context.Context, req *http.Request) (*oauth2.Token, error) {
+	r, err := ContextClient(ctx).Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1<<20))
+	r.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("oauth2: cannot fetch token: %v", err)
+	}
+
+	failureStatus := r.StatusCode < 200 || r.StatusCode > 299
+	retrieveError := &oauth2.RetrieveError{
+		Response: r,
+		Body:     body,
+		// attempt to populate error detail below
+	}
+
+	var token *oauth2.Token
+	content, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	switch content {
+	case "application/x-www-form-urlencoded", "text/plain":
+		// some endpoints return a query string
+		vals, err := url.ParseQuery(string(body))
+		if err != nil {
+			if failureStatus {
+				return nil, retrieveError
+			}
+			return nil, fmt.Errorf("oauth2: cannot parse response: %v", err)
+		}
+		retrieveError.ErrorCode = vals.Get("error")
+		retrieveError.ErrorDescription = vals.Get("error_description")
+		retrieveError.ErrorURI = vals.Get("error_uri")
+		token = &oauth2.Token{
+			AccessToken:  vals.Get("access_token"),
+			TokenType:    vals.Get("token_type"),
+			RefreshToken: vals.Get("refresh_token"),
+		}
+		e := vals.Get("expires_in")
+		expires, _ := strconv.Atoi(e)
+		if expires != 0 {
+			token.Expiry = time.Now().Add(time.Duration(expires) * time.Second)
+		}
+	default:
+		var tj tokenJSON
+		if err = json.Unmarshal(body, &tj); err != nil {
+			if failureStatus {
+				return nil, retrieveError
+			}
+			return nil, fmt.Errorf("oauth2: cannot parse json: %v", err)
+		}
+		retrieveError.ErrorCode = tj.ErrorCode
+		retrieveError.ErrorDescription = tj.ErrorDescription
+		retrieveError.ErrorURI = tj.ErrorURI
+		token = &oauth2.Token{
+			AccessToken:  tj.AccessToken,
+			TokenType:    tj.TokenType,
+			RefreshToken: tj.RefreshToken,
+			Expiry:       tj.expiry(),
+		}
+	}
+	if failureStatus || retrieveError.ErrorCode != "" {
+		return nil, retrieveError
+	}
+	if token.AccessToken == "" {
+		return nil, errors.New("oauth2: server response missing access_token")
+	}
+	return token, nil
+}
+
+// HTTPClient is the context key to use with golang.org/x/net/context's
+// WithValue function to associate an *http.Client value with a context.
+var HTTPClient ContextKey
+
+// ContextKey is just an empty struct. It exists so HTTPClient can be
+// an immutable public variable with a unique type. It's immutable
+// because nobody else can create a ContextKey, being unexported.
+type ContextKey struct{}
+
+func ContextClient(ctx context.Context) *http.Client {
+	if ctx != nil {
+		if hc, ok := ctx.Value(HTTPClient).(*http.Client); ok {
+			return hc
+		}
+	}
+	return http.DefaultClient
+}
+
+// tokenJSON is the struct representing the HTTP response from OAuth2
+// providers returning a token or error in JSON form.
+// https://datatracker.ietf.org/doc/html/rfc6749#section-5.1
+type tokenJSON struct {
+	AccessToken  string         `json:"access_token"`
+	TokenType    string         `json:"token_type"`
+	RefreshToken string         `json:"refresh_token"`
+	ExpiresIn    expirationTime `json:"expires_in"` // at least PayPal returns string, while most return number
+	// error fields
+	// https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
+	ErrorCode        string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+	ErrorURI         string `json:"error_uri"`
+}
+
+type expirationTime int32
+
+func (e *tokenJSON) expiry() (t time.Time) {
+	if v := e.ExpiresIn; v != 0 {
+		return time.Now().Add(time.Duration(v) * time.Second)
+	}
+	return
 }
 
 // ManagedIdentityCallback retrieves a token using the managed identity credential of the Azure service.
