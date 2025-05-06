@@ -34,7 +34,8 @@ func OrgRedirect(cfg *setting.Cfg, userSvc user.Service, orgSvc org.Service) web
 		}
 		cmd := user.UpdateUserCommand{UserID: ctx.UserID, OrgID: &orgId}
 		if err := userSvc.Update(ctx.Req.Context(), &cmd); err != nil {
-			err = utils.CheckOrgExists(ctx.Req.Context(), orgSvc, orgId)
+			checker := utils.NewOrgExistsChecker(orgSvc)
+			err = checker(ctx.Req.Context(),orgId)
 
 			if err != nil {
 				if ctx.IsApiRequest() {
