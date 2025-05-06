@@ -99,6 +99,7 @@ export class DashboardModel implements TimeModel {
   private lastRefresh: number;
   private timeRangeUpdatedDuringEditOrView = false;
   private originalDashboard: Dashboard | null = null;
+  eagerLoad: boolean;
 
   // ------------------
   // not persisted
@@ -169,6 +170,7 @@ export class DashboardModel implements TimeModel {
     this.originalTemplating = cloneDeep(this.templating);
     this.originalTime = cloneDeep(this.time);
 
+    this.eagerLoad = data.eagerLoad ?? false;
     this.ensurePanelsHaveUniqueIds();
     this.formatDate = this.formatDate.bind(this);
 

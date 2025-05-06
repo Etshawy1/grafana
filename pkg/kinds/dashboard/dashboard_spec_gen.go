@@ -887,6 +887,8 @@ type Spec struct {
 	Timepicker *TimePickerConfig `json:"timepicker,omitempty"`
 	// The month that the fiscal year starts on.  0 = January, 11 = December
 	FiscalYearStartMonth *uint8 `json:"fiscalYearStartMonth,omitempty"`
+	// Whether a dashboard is eagarly loaded or not.
+	EagerLoad *bool `json:"eagerLoad,omitempty"`
 	// When set to true, the dashboard will redraw panels at an interval matching the pixel width.
 	// This will keep data "moving left" regardless of the query refresh rate. This setting helps
 	// avoid dashboards presenting stale live data
