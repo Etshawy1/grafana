@@ -2,7 +2,7 @@ import { css, cx } from '@emotion/css';
 import React, { useState, ChangeEvent, FocusEvent, useCallback } from 'react';
 
 import { rangeUtil, PanelData, DataSourceApi, GrafanaTheme2 } from '@grafana/data';
-import { Input, InlineSwitch, useStyles2, InlineLabel } from '@grafana/ui';
+import { Badge, Input, InlineSwitch, useStyles2, InlineLabel } from '@grafana/ui';
 import { QueryOperationRow } from 'app/core/components/QueryOperationRow/QueryOperationRow';
 import { QueryGroupOptions } from 'app/types';
 
@@ -174,15 +174,22 @@ export const QueryGroupOptionsEditor = React.memo(({ options, dataSource, data, 
   };
 
   const renderQueryCachingTTLOption = () => {
-    const tooltip = `Cache time-to-live: How long results from this queries in this panel will be cached, in milliseconds. Defaults to the TTL in the caching configuration for this datasource.`;
+    const tooltip = `Cache time-to-live: How long results from this queries in this panel will be cached, in seconds. Set to 0 to Disable caching.`;
 
-    if (!dataSource.cachingConfig?.enabled) {
-      return null;
-    }
+    // if (!dataSource.cachingConfig?.enabled) {
+    //   return null;
+    // }
 
     return (
       <>
-        <InlineLabel tooltip={tooltip}>Cache TTL</InlineLabel>
+        <InlineLabel tooltip={tooltip}>
+          Cache TTL
+          <Badge
+              color="blue"
+              title="This feature is close to complete but not fully tested"
+              text="Beta"
+            />
+        </InlineLabel>
         <Input
           type="number"
           placeholder={`${dataSource.cachingConfig.TTLMs}`}

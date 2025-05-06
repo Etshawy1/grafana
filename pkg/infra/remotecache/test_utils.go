@@ -28,6 +28,20 @@ func (fcs FakeCacheStorage) Delete(_ context.Context, key string) error {
 	return nil
 }
 
+func (fcs FakeCacheStorage) Count(_ context.Context, prefix string) (int64, error) {
+	return int64(len(fcs.Storage)), nil
+}
+
+func (fcs FakeCacheStorage) DeleteWithPrefix(_ context.Context, prefix string) error {
+	for key := range fcs.Storage {
+		if key[:len(prefix)] == prefix {
+			delete(fcs.Storage, key)
+		}
+	}
+
+	return nil
+}
+
 func NewFakeCacheStorage() FakeCacheStorage {
 	return FakeCacheStorage{
 		Storage: map[string][]byte{},
